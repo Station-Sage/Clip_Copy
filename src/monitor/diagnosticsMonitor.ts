@@ -25,7 +25,7 @@ export function registerDiagnosticsMonitor(context: vscode.ExtensionContext): vo
     listeners.forEach((cb) => cb(errors, warnings));
 
     // Notify only when new errors appear
-    if (errors > lastErrorCount && config.autoLevel !== 'off') {
+    if (errors > lastErrorCount) {
       const newErrors = errors - lastErrorCount;
       vscode.window
         .showWarningMessage(`AI Bridge: ${newErrors} new error(s) detected`, 'Copy Errors')

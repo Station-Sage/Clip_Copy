@@ -39,9 +39,7 @@ export function registerGitEventMonitor(context: vscode.ExtensionContext): void 
         if (currentBranch !== prevBranch) {
           prevBranch = currentBranch;
           listeners.forEach((cb) => cb('branch'));
-          if (config.autoLevel !== 'off') {
-            vscode.window.showInformationMessage(`AI Bridge: Switched to branch "${currentBranch}"`);
-          }
+          vscode.window.showInformationMessage(`AI Bridge: Switched to branch "${currentBranch}"`);
         } else {
           // Could be a commit - notify
           listeners.forEach((cb) => cb('commit'));

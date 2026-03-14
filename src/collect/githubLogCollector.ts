@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as https from 'https';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 import { getConfig } from '../config';
 import { getLastBuildResult } from './localBuildCollector';
 

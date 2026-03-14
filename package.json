@@ -184,7 +184,11 @@
         },
         "aibridge.gitDiffMode": {
           "type": "string",
-          "enum": ["staged", "unstaged", "both"],
+          "enum": [
+            "staged",
+            "unstaged",
+            "both"
+          ],
           "default": "unstaged",
           "description": "Default git diff mode"
         },
@@ -220,14 +224,22 @@
         },
         "aibridge.buildCommands": {
           "type": "array",
-          "items": { "type": "string" },
-          "default": ["npm run build"],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm run build"
+          ],
           "description": "Local build commands to run (first one is used by default)"
         },
         "aibridge.testCommands": {
           "type": "array",
-          "items": { "type": "string" },
-          "default": ["npm test"],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm test"
+          ],
           "description": "Local test commands to run (first one is used by default)"
         },
         "aibridge.chatUrl": {
@@ -237,7 +249,11 @@
         },
         "aibridge.autoLevel": {
           "type": "string",
-          "enum": ["off", "notify", "auto"],
+          "enum": [
+            "off",
+            "notify",
+            "auto"
+          ],
           "default": "notify",
           "description": "Automation level: off=manual only, notify=show notification on events, auto=update panel automatically"
         },
@@ -259,22 +275,23 @@
     "package": "vsce package"
   },
   "dependencies": {
-    "diff": "^5.1.0",
-    "adm-zip": "^0.5.10"
+    "adm-zip": "^0.5.10",
+    "diff": "^5.1.0"
   },
   "devDependencies": {
-    "@types/vscode": "^1.85.0",
-    "@types/diff": "^5.0.9",
     "@types/adm-zip": "^0.5.5",
-    "@types/node": "^20.0.0",
+    "@types/diff": "^5.0.9",
+    "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.0",
-    "@vscode/test-electron": "^2.3.0",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.0.0",
-    "typescript": "^5.0.0",
-    "prettier": "^3.0.0",
+    "@vscode/test-electron": "^2.3.0",
     "@vscode/vsce": "^2.0.0",
-    "mocha": "^10.0.0"
+    "eslint": "^8.0.0",
+    "mocha": "^10.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
   }
 }
