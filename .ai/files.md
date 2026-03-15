@@ -4,7 +4,7 @@
 
 ## 진입점
 - extension.ts (~80줄) — activate/deactivate, 명령 등록, 모니터 초기화, 사이드바 등록
-- config.ts (~60줄) — AiBridgeConfig 인터페이스, VS Code 설정 + .ai-bridge.json 병합
+- config.ts (~60줄) — CodeBreezeConfig 인터페이스, VS Code 설정 + .codebreeze.json 병합
 - types.ts (~50줄) — CodeBlock, ApplyResult, HistoryEntry, BuildResult, ParsedError, ContextPayload, MonitorEvent
 
 ## apply/ — AI챗 → VS Code

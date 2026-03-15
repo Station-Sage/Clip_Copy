@@ -10,7 +10,7 @@ let outputChannel: vscode.OutputChannel | null = null;
 
 export function getOutputChannel(): vscode.OutputChannel {
   if (!outputChannel) {
-    outputChannel = vscode.window.createOutputChannel('AI Bridge Build');
+    outputChannel = vscode.window.createOutputChannel('CodeBreeze Build');
   }
   return outputChannel;
 }
@@ -19,7 +19,7 @@ export async function runBuildAndCopy(): Promise<BuildResult | null> {
   const config = getConfig();
   const commands = config.buildCommands;
   if (!commands.length) {
-    vscode.window.showErrorMessage('AI Bridge: No build commands configured');
+    vscode.window.showErrorMessage('CodeBreeze: No build commands configured');
     return null;
   }
 
@@ -33,7 +33,7 @@ export async function runTestAndCopy(): Promise<BuildResult | null> {
   const config = getConfig();
   const commands = config.testCommands;
   if (!commands.length) {
-    vscode.window.showErrorMessage('AI Bridge: No test commands configured');
+    vscode.window.showErrorMessage('CodeBreeze: No test commands configured');
     return null;
   }
 
@@ -52,7 +52,7 @@ async function pickCommand(commands: string[], type: string): Promise<string | u
 export async function runCommandAndCopy(command: string): Promise<BuildResult | null> {
   const workspaceRoot = getWorkspaceRoot();
   if (!workspaceRoot) {
-    vscode.window.showErrorMessage('AI Bridge: No workspace open');
+    vscode.window.showErrorMessage('CodeBreeze: No workspace open');
     return null;
   }
 
@@ -63,7 +63,7 @@ export async function runCommandAndCopy(command: string): Promise<BuildResult | 
   channel.appendLine('');
 
   const startTime = Date.now();
-  vscode.window.showInformationMessage(`AI Bridge: Running "${command}"...`);
+  vscode.window.showInformationMessage(`CodeBreeze: Running "${command}"...`);
 
   const result = await spawnAsync(command, [], workspaceRoot, (data) => {
     channel.append(data);
@@ -88,7 +88,7 @@ export async function runCommandAndCopy(command: string): Promise<BuildResult | 
   await vscode.env.clipboard.writeText(markdown);
 
   const status = result.exitCode === 0 ? 'succeeded' : 'FAILED';
-  const msg = `AI Bridge: Build ${status} (${duration.toFixed(1)}s) — copied to clipboard`;
+  const msg = `CodeBreeze: Build ${status} (${duration.toFixed(1)}s) — copied to clipboard`;
   if (result.exitCode === 0) {
     vscode.window.showInformationMessage(msg);
   } else {
@@ -100,14 +100,14 @@ export async function runCommandAndCopy(command: string): Promise<BuildResult | 
 
 export function copyLastBuildLog(): void {
   if (!lastBuildResult) {
-    vscode.window.showInformationMessage('AI Bridge: No build log available');
+    vscode.window.showInformationMessage('CodeBreeze: No build log available');
     return;
   }
 
   const workspaceRoot = getWorkspaceRoot() || '';
   const markdown = buildResultToMarkdown(lastBuildResult, workspaceRoot);
   vscode.env.clipboard.writeText(markdown);
-  vscode.window.showInformationMessage('AI Bridge: Last build log copied to clipboard');
+  vscode.window.showInformationMessage('CodeBreeze: Last build log copied to clipboard');
 }
 
 function buildResultToMarkdown(result: BuildResult, workspaceRoot: string): string {

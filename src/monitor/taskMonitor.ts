@@ -51,12 +51,12 @@ export function registerTaskMonitor(context: vscode.ExtensionContext): void {
     if (failed && config.autoLevel !== 'off') {
       vscode.window
         .showWarningMessage(
-          `AI Bridge: "${e.execution.task.name}" failed (exit ${e.exitCode})`,
+          `CodeBreeze: "${e.execution.task.name}" failed (exit ${e.exitCode})`,
           'Open Control Panel'
         )
         .then((choice) => {
           if (choice === 'Open Control Panel') {
-            vscode.commands.executeCommand('aibridge.openControlPanel');
+            vscode.commands.executeCommand('codebreeze.openControlPanel');
           }
         });
     }

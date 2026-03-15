@@ -9,7 +9,7 @@ import { ApplyResult, CodeBlock } from '../types';
 export async function applyFromClipboard(): Promise<void> {
   const text = await vscode.env.clipboard.readText();
   if (!text.trim()) {
-    vscode.window.showInformationMessage('AI Bridge: Clipboard is empty');
+    vscode.window.showInformationMessage('CodeBreeze: Clipboard is empty');
     return;
   }
 
@@ -33,7 +33,7 @@ export async function applyFromClipboard(): Promise<void> {
 
   const blocks = parseClipboard(text);
   if (blocks.length === 0) {
-    vscode.window.showInformationMessage('AI Bridge: No code blocks found in clipboard');
+    vscode.window.showInformationMessage('CodeBreeze: No code blocks found in clipboard');
     return;
   }
 
@@ -146,7 +146,7 @@ function showApplySummary(results: ApplyResult[]): void {
   if (skipped > 0) parts.push(`${skipped} skipped`);
   if (failed > 0) parts.push(`${failed} failed`);
 
-  const msg = `AI Bridge: ${parts.join(', ')}`;
+  const msg = `CodeBreeze: ${parts.join(', ')}`;
   if (failed > 0) {
     vscode.window.showWarningMessage(msg);
   } else {

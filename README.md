@@ -1,8 +1,8 @@
-# AI Bridge
+# CodeBreeze
 
 **Automate code transfer between AI chats (Genspark, ChatGPT, Claude, etc.) and VS Code via clipboard.**
 
-AI Bridge removes the friction of copy-pasting code between AI chat tools and your editor. It works with any AI service — no special integration required.
+CodeBreeze removes the friction of copy-pasting code between AI chat tools and your editor. It works with any AI service — no special integration required.
 
 ---
 
@@ -13,7 +13,7 @@ AI Bridge removes the friction of copy-pasting code between AI chat tools and yo
 | Action | Shortcut |
 |--------|----------|
 | Apply code blocks from clipboard | `Ctrl+Shift+A` |
-| Open AI Bridge Control Panel | `Ctrl+Shift+I` |
+| Open CodeBreeze Control Panel | `Ctrl+Shift+I` |
 
 - Parses markdown code blocks from clipboard (supports ` ```lang:filepath ` format)
 - Extracts file paths from block headers or preceding comments
@@ -34,7 +34,7 @@ AI Bridge removes the friction of copy-pasting code between AI chat tools and yo
 - Run local build/test and copy output
 - Smart context: auto-collect current file + errors + recent git changes
 
-### AI Bridge Control Panel (`Ctrl+Shift+I`)
+### CodeBreeze Control Panel (`Ctrl+Shift+I`)
 
 A split panel with:
 - **Left (Send)**: Buttons to copy file, selection, errors, git diff, run build/test
@@ -43,11 +43,11 @@ A split panel with:
 
 ### Open AI Chat in VS Code
 
-Click **💬 Open AI Chat** in the sidebar or run `AI Bridge: Open AI Chat` to open your configured AI chat URL (default: Genspark) in a VS Code tab.
+Click **💬 Open AI Chat** in the sidebar or run `CodeBreeze: Open AI Chat` to open your configured AI chat URL (default: Genspark) in a VS Code tab.
 
 ### VS Code Event Monitoring
 
-AI Bridge monitors VS Code internally and notifies you when:
+CodeBreeze monitors VS Code internally and notifies you when:
 - Build/compile tasks complete (success or failure)
 - Terminal output contains errors
 - Compiler diagnostics (errors/warnings) change
@@ -59,18 +59,18 @@ AI Bridge monitors VS Code internally and notifies you when:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `aibridge.chatUrl` | `https://www.genspark.ai/agents?type=ai_chat` | AI chat URL to open |
-| `aibridge.buildCommands` | `["npm run build"]` | Local build commands |
-| `aibridge.testCommands` | `["npm test"]` | Local test commands |
-| `aibridge.gitDiffMode` | `unstaged` | Git diff mode (staged/unstaged/both) |
-| `aibridge.contextLines` | `15` | Lines around errors to include |
-| `aibridge.autoLevel` | `notify` | Automation level (off/notify/auto) |
-| `aibridge.autoWatchClipboard` | `false` | Auto-watch clipboard in control panel |
-| `aibridge.githubToken` | `` | GitHub PAT for remote CI logs (optional) |
+| `codebreeze.chatUrl` | `https://www.genspark.ai/agents?type=ai_chat` | AI chat URL to open |
+| `codebreeze.buildCommands` | `["npm run build"]` | Local build commands |
+| `codebreeze.testCommands` | `["npm test"]` | Local test commands |
+| `codebreeze.gitDiffMode` | `unstaged` | Git diff mode (staged/unstaged/both) |
+| `codebreeze.contextLines` | `15` | Lines around errors to include |
+| `codebreeze.autoLevel` | `notify` | Automation level (off/notify/auto) |
+| `codebreeze.autoWatchClipboard` | `false` | Auto-watch clipboard in control panel |
+| `codebreeze.githubToken` | `` | GitHub PAT for remote CI logs (optional) |
 
 ### Project-level config
 
-Create `.ai-bridge.json` in your workspace root to override settings:
+Create `.codebreeze.json` in your workspace root to override settings:
 
 ```json
 {
@@ -84,7 +84,7 @@ Create `.ai-bridge.json` in your workspace root to override settings:
 
 ## Code Block Format
 
-AI Bridge recognizes these formats from AI chat responses:
+CodeBreeze recognizes these formats from AI chat responses:
 
 **Inline filepath (preferred):**
 ````
@@ -105,7 +105,7 @@ AI Bridge recognizes these formats from AI chat responses:
 
 ## Commands
 
-All commands are available via `Ctrl+Shift+P` → `AI Bridge`:
+All commands are available via `Ctrl+Shift+P` → `CodeBreeze`:
 
 - `Apply Code from Clipboard`
 - `Copy File for AI`
@@ -117,7 +117,7 @@ All commands are available via `Ctrl+Shift+P` → `AI Bridge`:
 - `Run Test and Copy Log`
 - `Copy Smart Context for AI`
 - `Open AI Chat`
-- `Open AI Bridge Control Panel`
+- `Open CodeBreeze Control Panel`
 - `Undo Last Apply`
 
 ---

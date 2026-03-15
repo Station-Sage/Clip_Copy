@@ -28,10 +28,10 @@ export function registerDiagnosticsMonitor(context: vscode.ExtensionContext): vo
     if (errors > lastErrorCount) {
       const newErrors = errors - lastErrorCount;
       vscode.window
-        .showWarningMessage(`AI Bridge: ${newErrors} new error(s) detected`, 'Copy Errors')
+        .showWarningMessage(`CodeBreeze: ${newErrors} new error(s) detected`, 'Copy Errors')
         .then((choice) => {
           if (choice === 'Copy Errors') {
-            vscode.commands.executeCommand('aibridge.copyErrorsForAI');
+            vscode.commands.executeCommand('codebreeze.copyErrorsForAI');
           }
         });
     }

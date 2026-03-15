@@ -13,7 +13,7 @@ export async function copyBuildLogFromGitHub(): Promise<void> {
       { placeHolder: 'A local build log is available' }
     );
     if (useLocal === 'Use local build log') {
-      await vscode.commands.executeCommand('aibridge.copyLastBuildLog');
+      await vscode.commands.executeCommand('codebreeze.copyLastBuildLog');
       return;
     }
   }
@@ -21,25 +21,25 @@ export async function copyBuildLogFromGitHub(): Promise<void> {
   const config = getConfig();
   if (!config.githubToken || !config.githubRepo) {
     vscode.window.showErrorMessage(
-      'AI Bridge: Set aibridge.githubToken and aibridge.githubRepo in settings'
+      'CodeBreeze: Set codebreeze.githubToken and codebreeze.githubRepo in settings'
     );
     return;
   }
 
   try {
-    vscode.window.showInformationMessage('AI Bridge: Fetching GitHub Actions logs...');
+    vscode.window.showInformationMessage('CodeBreeze: Fetching GitHub Actions logs...');
     const log = await fetchFailedJobLog(config.githubToken, config.githubRepo);
 
     if (!log) {
-      vscode.window.showInformationMessage('AI Bridge: No failed workflow runs found');
+      vscode.window.showInformationMessage('CodeBreeze: No failed workflow runs found');
       return;
     }
 
     await vscode.env.clipboard.writeText(log);
-    vscode.window.showInformationMessage('AI Bridge: GitHub Actions log copied to clipboard');
+    vscode.window.showInformationMessage('CodeBreeze: GitHub Actions log copied to clipboard');
   } catch (err) {
     vscode.window.showErrorMessage(
-      `AI Bridge: Failed to fetch GitHub log: ${err instanceof Error ? err.message : String(err)}`
+      `CodeBreeze: Failed to fetch GitHub log: ${err instanceof Error ? err.message : String(err)}`
     );
   }
 }
@@ -99,7 +99,7 @@ function githubGet(path: string, token: string): Promise<unknown> {
       path,
       headers: {
         Authorization: `Bearer ${token}`,
-        'User-Agent': 'ai-bridge-vscode',
+        'User-Agent': 'codebreeze-vscode',
         Accept: 'application/vnd.github.v3+json',
       },
     };
@@ -125,7 +125,7 @@ function githubGetBuffer(path: string, token: string): Promise<Buffer> {
       path,
       headers: {
         Authorization: `Bearer ${token}`,
-        'User-Agent': 'ai-bridge-vscode',
+        'User-Agent': 'codebreeze-vscode',
         Accept: 'application/vnd.github.v3+json',
       },
     };

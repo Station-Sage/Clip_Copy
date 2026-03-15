@@ -13,7 +13,7 @@ import { copyBuildLogFromGitHub } from './collect/githubLogCollector';
 import { copySmartContext } from './collect/smartContext';
 
 // UI
-import { AiBridgeSidebarProvider } from './ui/sidebarProvider';
+import { CodeBreezeSidebarProvider } from './ui/sidebarProvider';
 import { initHistoryStore } from './ui/historyStore';
 import { initStatusBar, flashStatusBar } from './ui/statusBarItem';
 import { openChatPanel, openControlPanel } from './ui/chatPanel';
@@ -30,9 +30,9 @@ export function activate(context: vscode.ExtensionContext): void {
   initStatusBar(context);
 
   // Register sidebar
-  const sidebarProvider = new AiBridgeSidebarProvider();
+  const sidebarProvider = new CodeBreezeSidebarProvider();
   const sidebarDisposable = vscode.window.registerTreeDataProvider(
-    'aiBridgeSidebar',
+    'codebreezeSidebar',
     sidebarProvider
   );
   context.subscriptions.push(sidebarDisposable);
@@ -53,21 +53,21 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Register all commands
   const commands: [string, (...args: unknown[]) => unknown][] = [
-    ['aibridge.applyFromClipboard', () => applyFromClipboard()],
-    ['aibridge.undoLastApply', () => undoLastApply()],
-    ['aibridge.copyFileForAI', (uri?: unknown) => copyFileForAI(uri as vscode.Uri | undefined)],
-    ['aibridge.copySelectionForAI', () => copySelectionForAI()],
-    ['aibridge.copyGitDiffForAI', () => copyGitDiffForAI()],
-    ['aibridge.copyGitLogForAI', () => copyGitLogForAI()],
-    ['aibridge.copyErrorsForAI', () => copyErrorsForAI()],
-    ['aibridge.runBuildAndCopy', () => runBuildAndCopy()],
-    ['aibridge.runTestAndCopy', () => runTestAndCopy()],
-    ['aibridge.copyLastBuildLog', () => copyLastBuildLog()],
-    ['aibridge.copyBuildLogFromGitHub', () => copyBuildLogFromGitHub()],
-    ['aibridge.copySmartContext', () => copySmartContext()],
-    ['aibridge.openChatPanel', () => openChatPanel()],
-    ['aibridge.openControlPanel', () => openControlPanel(context)],
-    ['aibridge.refreshSidebar', () => sidebarProvider.refresh()],
+    ['codebreeze.applyFromClipboard', () => applyFromClipboard()],
+    ['codebreeze.undoLastApply', () => undoLastApply()],
+    ['codebreeze.copyFileForAI', (uri?: unknown) => copyFileForAI(uri as vscode.Uri | undefined)],
+    ['codebreeze.copySelectionForAI', () => copySelectionForAI()],
+    ['codebreeze.copyGitDiffForAI', () => copyGitDiffForAI()],
+    ['codebreeze.copyGitLogForAI', () => copyGitLogForAI()],
+    ['codebreeze.copyErrorsForAI', () => copyErrorsForAI()],
+    ['codebreeze.runBuildAndCopy', () => runBuildAndCopy()],
+    ['codebreeze.runTestAndCopy', () => runTestAndCopy()],
+    ['codebreeze.copyLastBuildLog', () => copyLastBuildLog()],
+    ['codebreeze.copyBuildLogFromGitHub', () => copyBuildLogFromGitHub()],
+    ['codebreeze.copySmartContext', () => copySmartContext()],
+    ['codebreeze.openChatPanel', () => openChatPanel()],
+    ['codebreeze.openControlPanel', () => openControlPanel(context)],
+    ['codebreeze.refreshSidebar', () => sidebarProvider.refresh()],
   ];
 
   for (const [id, handler] of commands) {

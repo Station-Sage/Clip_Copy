@@ -1,7 +1,7 @@
 # AGENTS.md — AI Agent 컨텍스트
 
 ## GitHub
-https://github.com/Station-Sage/Clip_Copy
+https://github.com/Station-Sage/CodeBreeze
 
 ## 세션 시작
 위 레포에서 아래 순서로 읽기:
@@ -10,7 +10,7 @@ https://github.com/Station-Sage/Clip_Copy
 3. .ai/todo.md (할일)
 
 ## 프로젝트
-AI Bridge — AI챗(젠스파크, ChatGPT, Claude 등) ↔ VS Code 간 코드 전달 자동화 확장
+CodeBreeze — AI챗(젠스파크, ChatGPT, Claude 등) ↔ VS Code 간 코드 전달 자동화 확장
 클립보드 기반 범용 설계, 특정 AI 서비스 비종속
 
 ## 기술 스택
@@ -31,7 +31,7 @@ src/
 
 ## 주요 파일
 - extension.ts — 진입점, 명령 등록, 모니터 초기화
-- config.ts — 설정 로드 (VS Code 설정 + .ai-bridge.json 병합)
+- config.ts — 설정 로드 (VS Code 설정 + .codebreeze.json 병합)
 - types.ts — 공유 타입 정의
 - apply/ — AI챗 → VS Code (코드 적용)
 - collect/ — VS Code → AI챗 (컨텍스트 수집)

@@ -11,7 +11,7 @@ export function generateControlPanelHtml(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
-  <title>AI Bridge</title>
+  <title>CodeBreeze</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -154,7 +154,7 @@ export function generateControlPanelHtml(
 </head>
 <body>
   <div class="toolbar">
-    <span class="toolbar-title">🤖 AI Bridge</span>
+    <span class="toolbar-title">🤖 CodeBreeze</span>
     <button class="secondary icon" id="btnRefresh" title="Refresh clipboard">🔄</button>
     <button class="secondary icon" id="btnOpenChat" title="Open AI Chat">💬</button>
   </div>

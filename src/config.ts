@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
-export interface AiBridgeConfig {
+export interface CodeBreezeConfig {
   filePathPattern: string;
   sourceRoot: string;
   gitDiffMode: 'staged' | 'unstaged' | 'both';
@@ -19,11 +19,11 @@ export interface AiBridgeConfig {
   autoWatchClipboard: boolean;
 }
 
-const LOCAL_CONFIG_FILE = '.ai-bridge.json';
+const LOCAL_CONFIG_FILE = '.codebreeze.json';
 
-export function getConfig(): AiBridgeConfig {
-  const vsConfig = vscode.workspace.getConfiguration('aibridge');
-  const base: AiBridgeConfig = {
+export function getConfig(): CodeBreezeConfig {
+  const vsConfig = vscode.workspace.getConfiguration('codebreeze');
+  const base: CodeBreezeConfig = {
     filePathPattern: vsConfig.get('filePathPattern', ''),
     sourceRoot: vsConfig.get('sourceRoot', ''),
     gitDiffMode: vsConfig.get('gitDiffMode', 'unstaged'),

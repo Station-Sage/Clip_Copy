@@ -38,7 +38,7 @@ export function registerTerminalMonitor(context: vscode.ExtensionContext): void 
         lastErrorNotifyTime = Date.now();
         if (config.autoLevel === 'auto') {
           // Emit event for panel update
-          vscode.commands.executeCommand('aibridge._terminalError', e.data.substring(0, 500));
+          vscode.commands.executeCommand('codebreeze._terminalError', e.data.substring(0, 500));
         }
       }
     }

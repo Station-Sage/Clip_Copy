@@ -1,6 +1,6 @@
 {
-  "name": "ai-bridge",
-  "displayName": "AI Bridge",
+  "name": "codebreeze",
+  "displayName": "CodeBreeze",
   "description": "Automate code transfer between AI chats (Genspark, ChatGPT, etc.) and VS Code via clipboard",
   "version": "0.1.0",
   "publisher": "station-sage",
@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Station-Sage/Clip_Copy"
+    "url": "https://github.com/Station-Sage/CodeBreeze"
   },
   "activationEvents": [
     "onStartupFinished"
@@ -30,96 +30,96 @@
   "contributes": {
     "commands": [
       {
-        "command": "aibridge.applyFromClipboard",
+        "command": "codebreeze.applyFromClipboard",
         "title": "Apply Code from Clipboard",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copyFileForAI",
+        "command": "codebreeze.copyFileForAI",
         "title": "Copy File for AI",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copySelectionForAI",
+        "command": "codebreeze.copySelectionForAI",
         "title": "Copy Selection for AI",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copyGitDiffForAI",
+        "command": "codebreeze.copyGitDiffForAI",
         "title": "Copy Git Diff for AI",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copyGitLogForAI",
+        "command": "codebreeze.copyGitLogForAI",
         "title": "Copy Git Log for AI",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copyErrorsForAI",
+        "command": "codebreeze.copyErrorsForAI",
         "title": "Copy Errors for AI",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copyBuildLogFromGitHub",
+        "command": "codebreeze.copyBuildLogFromGitHub",
         "title": "Copy Build Log from GitHub",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.runBuildAndCopy",
+        "command": "codebreeze.runBuildAndCopy",
         "title": "Run Build and Copy Log",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.runTestAndCopy",
+        "command": "codebreeze.runTestAndCopy",
         "title": "Run Test and Copy Log",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copyLastBuildLog",
+        "command": "codebreeze.copyLastBuildLog",
         "title": "Copy Last Build Log",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.copySmartContext",
+        "command": "codebreeze.copySmartContext",
         "title": "Copy Smart Context for AI",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.undoLastApply",
+        "command": "codebreeze.undoLastApply",
         "title": "Undo Last Apply",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.openChatPanel",
+        "command": "codebreeze.openChatPanel",
         "title": "Open AI Chat",
-        "category": "AI Bridge"
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.openControlPanel",
-        "title": "Open AI Bridge Control Panel",
-        "category": "AI Bridge"
+        "command": "codebreeze.openControlPanel",
+        "title": "Open CodeBreeze Control Panel",
+        "category": "CodeBreeze"
       },
       {
-        "command": "aibridge.refreshSidebar",
+        "command": "codebreeze.refreshSidebar",
         "title": "Refresh",
-        "category": "AI Bridge",
+        "category": "CodeBreeze",
         "icon": "$(refresh)"
       }
     ],
     "keybindings": [
       {
-        "command": "aibridge.applyFromClipboard",
+        "command": "codebreeze.applyFromClipboard",
         "key": "ctrl+shift+a",
         "mac": "cmd+shift+a"
       },
       {
-        "command": "aibridge.copyFileForAI",
+        "command": "codebreeze.copyFileForAI",
         "key": "ctrl+shift+c",
         "mac": "cmd+shift+c",
         "when": "editorFocus"
       },
       {
-        "command": "aibridge.openControlPanel",
+        "command": "codebreeze.openControlPanel",
         "key": "ctrl+shift+i",
         "mac": "cmd+shift+i"
       }
@@ -127,17 +127,17 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "ai-bridge",
-          "title": "AI Bridge",
+          "id": "codebreeze",
+          "title": "CodeBreeze",
           "icon": "resources/icon.svg"
         }
       ]
     },
     "views": {
-      "ai-bridge": [
+      "codebreeze": [
         {
-          "id": "aiBridgeSidebar",
-          "name": "AI Bridge",
+          "id": "codebreezeSidebar",
+          "name": "CodeBreeze",
           "type": "tree"
         }
       ]
@@ -145,43 +145,43 @@
     "menus": {
       "view/title": [
         {
-          "command": "aibridge.refreshSidebar",
-          "when": "view == aiBridgeSidebar",
+          "command": "codebreeze.refreshSidebar",
+          "when": "view == codebreezeSidebar",
           "group": "navigation"
         }
       ],
       "explorer/context": [
         {
-          "command": "aibridge.copyFileForAI",
-          "group": "aibridge@1"
+          "command": "codebreeze.copyFileForAI",
+          "group": "codebreeze@1"
         }
       ],
       "editor/context": [
         {
-          "command": "aibridge.copySelectionForAI",
-          "group": "aibridge@1",
+          "command": "codebreeze.copySelectionForAI",
+          "group": "codebreeze@1",
           "when": "editorHasSelection"
         },
         {
-          "command": "aibridge.copyFileForAI",
-          "group": "aibridge@2"
+          "command": "codebreeze.copyFileForAI",
+          "group": "codebreeze@2"
         }
       ]
     },
     "configuration": {
-      "title": "AI Bridge",
+      "title": "CodeBreeze",
       "properties": {
-        "aibridge.filePathPattern": {
+        "codebreeze.filePathPattern": {
           "type": "string",
           "default": "",
           "description": "Custom regex pattern for extracting file paths from code block headers (leave empty to use default)"
         },
-        "aibridge.sourceRoot": {
+        "codebreeze.sourceRoot": {
           "type": "string",
           "default": "",
           "description": "Default source root path within the workspace (e.g. 'src')"
         },
-        "aibridge.gitDiffMode": {
+        "codebreeze.gitDiffMode": {
           "type": "string",
           "enum": [
             "staged",
@@ -191,37 +191,37 @@
           "default": "unstaged",
           "description": "Default git diff mode"
         },
-        "aibridge.githubToken": {
+        "codebreeze.githubToken": {
           "type": "string",
           "default": "",
           "description": "GitHub Personal Access Token for fetching remote build logs (optional, local builds are preferred)"
         },
-        "aibridge.githubRepo": {
+        "codebreeze.githubRepo": {
           "type": "string",
           "default": "",
           "description": "GitHub repository in owner/repo format (e.g. 'octocat/hello-world')"
         },
-        "aibridge.contextLines": {
+        "codebreeze.contextLines": {
           "type": "number",
           "default": 15,
           "description": "Number of lines to include around error locations when copying context"
         },
-        "aibridge.chunkMaxLines": {
+        "codebreeze.chunkMaxLines": {
           "type": "number",
           "default": 200,
           "description": "Maximum lines per chunk when splitting large files"
         },
-        "aibridge.watchClipboard": {
+        "codebreeze.watchClipboard": {
           "type": "boolean",
           "default": false,
           "description": "Show notification when clipboard contains code blocks"
         },
-        "aibridge.gitLogCount": {
+        "codebreeze.gitLogCount": {
           "type": "number",
           "default": 10,
           "description": "Number of recent git log entries to include"
         },
-        "aibridge.buildCommands": {
+        "codebreeze.buildCommands": {
           "type": "array",
           "items": {
             "type": "string"
@@ -231,7 +231,7 @@
           ],
           "description": "Local build commands to run (first one is used by default)"
         },
-        "aibridge.testCommands": {
+        "codebreeze.testCommands": {
           "type": "array",
           "items": {
             "type": "string"
@@ -241,12 +241,12 @@
           ],
           "description": "Local test commands to run (first one is used by default)"
         },
-        "aibridge.chatUrl": {
+        "codebreeze.chatUrl": {
           "type": "string",
           "default": "https://www.genspark.ai/agents?type=ai_chat",
           "description": "URL to open for AI chat (used by Open AI Chat command)"
         },
-        "aibridge.autoLevel": {
+        "codebreeze.autoLevel": {
           "type": "string",
           "enum": [
             "off",
@@ -256,7 +256,7 @@
           "default": "notify",
           "description": "Automation level: off=manual only, notify=show notification on events, auto=update panel automatically"
         },
-        "aibridge.autoWatchClipboard": {
+        "codebreeze.autoWatchClipboard": {
           "type": "boolean",
           "default": false,
           "description": "Automatically watch clipboard for code blocks when control panel is open"

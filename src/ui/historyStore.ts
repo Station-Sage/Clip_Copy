@@ -5,7 +5,7 @@ const MAX_HISTORY = 20;
 let entries: HistoryEntry[] = [];
 let context: vscode.ExtensionContext | null = null;
 
-const STORAGE_KEY = 'aibridge.history';
+const STORAGE_KEY = 'codebreeze.history';
 
 export function initHistoryStore(ctx: vscode.ExtensionContext): void {
   context = ctx;

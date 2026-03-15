@@ -42,11 +42,11 @@ VS Code 내부 이벤트를 감시하여 상태 변화 시 알림/자동 수집:
 - statusBarItem: 상태바 아이콘 + 마지막 작업 상태
 
 ## 설정 구조
-- VS Code Settings (aibridge.*): 전역 기본값
-- .ai-bridge.json (워크스페이스 루트): 프로젝트별 오버라이드
+- VS Code Settings (codebreeze.*): 전역 기본값
+- .codebreeze.json (워크스페이스 루트): 프로젝트별 오버라이드
 - config.ts가 두 소스를 병합, 프로젝트 설정이 우선
 
 ## 코드 블록 파일 경로 인식 포맷
 인라인: ```typescript:src/app.ts
 주석: // filepath: src/app.ts (코드 블록 직전 줄)
-커스텀: aibridge.filePathPattern 설정으로 정규식 추가 가능
+커스텀: codebreeze.filePathPattern 설정으로 정규식 추가 가능

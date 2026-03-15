@@ -1,7 +1,7 @@
 # CLAUDE.md — Claude Code 컨텍스트
 
 ## GitHub
-https://github.com/Station-Sage/Clip_Copy
+https://github.com/Station-Sage/CodeBreeze
 
 ## 세션 시작
 아래 순서로 읽기:
@@ -10,7 +10,7 @@ https://github.com/Station-Sage/Clip_Copy
 3. .ai/todo.md (할일)
 
 ## 프로젝트
-AI Bridge — AI챗 ↔ VS Code 간 코드 전달 자동화 VS Code 확장 (TypeScript)
+CodeBreeze — AI챗 ↔ VS Code 간 코드 전달 자동화 VS Code 확장 (TypeScript)
 
 ## 빌드
 - 컴파일: npm run compile

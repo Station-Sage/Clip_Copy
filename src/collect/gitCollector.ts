@@ -5,7 +5,7 @@ import { getConfig, getWorkspaceRoot } from '../config';
 export async function copyGitDiffForAI(): Promise<void> {
   const workspaceRoot = getWorkspaceRoot();
   if (!workspaceRoot) {
-    vscode.window.showErrorMessage('AI Bridge: No workspace open');
+    vscode.window.showErrorMessage('CodeBreeze: No workspace open');
     return;
   }
 
@@ -34,14 +34,14 @@ export async function copyGitDiffForAI(): Promise<void> {
   }
 
   if (!diff.trim()) {
-    vscode.window.showInformationMessage('AI Bridge: No git changes found');
+    vscode.window.showInformationMessage('CodeBreeze: No git changes found');
     return;
   }
 
   const branch = execSync('git branch --show-current', workspaceRoot).trim();
   const header = `## Git Diff (${mode}) — branch: ${branch}\n\n`;
   await vscode.env.clipboard.writeText(header + '```diff\n' + diff + '\n```');
-  vscode.window.showInformationMessage('AI Bridge: Git diff copied to clipboard');
+  vscode.window.showInformationMessage('CodeBreeze: Git diff copied to clipboard');
 }
 
 export async function copyGitLogForAI(): Promise<void> {
@@ -55,7 +55,7 @@ export async function copyGitLogForAI(): Promise<void> {
   );
 
   if (!log.trim()) {
-    vscode.window.showInformationMessage('AI Bridge: No git log found');
+    vscode.window.showInformationMessage('CodeBreeze: No git log found');
     return;
   }
 
@@ -63,7 +63,7 @@ export async function copyGitLogForAI(): Promise<void> {
   const markdown = `## Git Log — branch: ${branch}\n\n\`\`\`\n${log}\n\`\`\``;
 
   await vscode.env.clipboard.writeText(markdown);
-  vscode.window.showInformationMessage('AI Bridge: Git log copied to clipboard');
+  vscode.window.showInformationMessage('CodeBreeze: Git log copied to clipboard');
 }
 
 export function getGitDiff(workspaceRoot: string, mode: 'staged' | 'unstaged' | 'both'): string {

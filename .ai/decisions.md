@@ -25,8 +25,8 @@ autoLevel 설정: off / notify(기본) / auto.
 notify: 이벤트 발생 시 알림만. auto: 자동으로 컨텍스트 수집 + 클립보드 갱신.
 기본을 notify로 둔 이유: 예상치 않은 클립보드 덮어쓰기 방지.
 
-## D6: 설정 2단계 병합 (VS Code 설정 + .ai-bridge.json)
-VS Code Settings는 전역 기본값, .ai-bridge.json은 프로젝트별 오버라이드.
+## D6: 설정 2단계 병합 (VS Code 설정 + .codebreeze.json)
+VS Code Settings는 전역 기본값, .codebreeze.json은 프로젝트별 오버라이드.
 프로젝트마다 빌드 명령(gradlew vs npm)이 다르므로 필요.
 
 ## D7: safetyGuard — 적용 전 git stash

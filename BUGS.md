@@ -8,7 +8,7 @@
 
 ## I-001: code-server 클립보드 폴백
 - 브라우저 환경에서 Clipboard API 실패 시 대체 수단 필요
-- 예상 수정: 파일 기반 전달 (.ai-bridge-clipboard.md 임시 파일) 또는 WebSocket
+- 예상 수정: 파일 기반 전달 (.codebreeze-clipboard.md 임시 파일) 또는 WebSocket
 - **상태**: 미구현
 
 ## I-002: 프로젝트 맵 자동 생성

@@ -23,8 +23,8 @@ export function openControlPanel(context: vscode.ExtensionContext): void {
   }
 
   controlPanel = vscode.window.createWebviewPanel(
-    'aiBridgeControl',
-    'AI Bridge',
+    'codebreezeControl',
+    'CodeBreeze',
     vscode.ViewColumn.Two,
     {
       enableScripts: true,
@@ -60,7 +60,7 @@ export function openControlPanel(context: vscode.ExtensionContext): void {
           const payload = await buildContextPayload(msg.types || []);
           if (payload) {
             await vscode.env.clipboard.writeText(payload);
-            vscode.window.showInformationMessage('AI Bridge: Context copied — paste into AI chat');
+            vscode.window.showInformationMessage('CodeBreeze: Context copied — paste into AI chat');
           }
           break;
         }
@@ -129,7 +129,7 @@ function startClipboardWatch(): void {
         if (config.autoLevel !== 'off') {
           vscode.window
             .showInformationMessage(
-              `AI Bridge: ${blocks.length} code block(s) detected in clipboard`,
+              `CodeBreeze: ${blocks.length} code block(s) detected in clipboard`,
               'Open Panel'
             )
             .then((choice) => {
@@ -154,7 +154,7 @@ async function applySingleBlock(block: CodeBlock): Promise<void> {
   const { createUndoPoint } = await import('../apply/safetyGuard');
 
   if (!block.filePath) {
-    vscode.window.showWarningMessage('AI Bridge: No file path in code block');
+    vscode.window.showWarningMessage('CodeBreeze: No file path in code block');
     return;
   }
 
@@ -170,7 +170,7 @@ async function applySingleBlock(block: CodeBlock): Promise<void> {
   await editor.edit((e) => e.replace(fullRange, block.content));
   await doc.save();
 
-  vscode.window.showInformationMessage(`AI Bridge: Applied to ${block.filePath}`);
+  vscode.window.showInformationMessage(`CodeBreeze: Applied to ${block.filePath}`);
 }
 
 export function updateControlPanel(blocks: CodeBlock[]): void {

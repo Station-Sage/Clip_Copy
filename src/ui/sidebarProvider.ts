@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { getHistory } from './historyStore';
 import { countDiagnostics } from '../monitor/diagnosticsMonitor';
 
-export class AiBridgeSidebarProvider implements vscode.TreeDataProvider<TreeItem> {
+export class CodeBreezeSidebarProvider implements vscode.TreeDataProvider<TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<TreeItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -36,11 +36,11 @@ export class AiBridgeSidebarProvider implements vscode.TreeDataProvider<TreeItem
   private getRootItems(): TreeItem[] {
     return [
       new TreeItem('💬 Open AI Chat', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.openChatPanel',
+        command: 'codebreeze.openChatPanel',
         title: 'Open AI Chat',
       }),
       new TreeItem('🖥️ Control Panel', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.openControlPanel',
+        command: 'codebreeze.openControlPanel',
         title: 'Open Control Panel',
       }, 'panel'),
       new TreeItem('📥 Apply', vscode.TreeItemCollapsibleState.Collapsed, undefined, 'apply'),
@@ -53,11 +53,11 @@ export class AiBridgeSidebarProvider implements vscode.TreeDataProvider<TreeItem
   private getApplyItems(): TreeItem[] {
     return [
       new TreeItem('Apply Code from Clipboard (Ctrl+Shift+A)', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.applyFromClipboard',
+        command: 'codebreeze.applyFromClipboard',
         title: 'Apply Code from Clipboard',
       }),
       new TreeItem('Undo Last Apply', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.undoLastApply',
+        command: 'codebreeze.undoLastApply',
         title: 'Undo Last Apply',
       }),
     ];
@@ -66,35 +66,35 @@ export class AiBridgeSidebarProvider implements vscode.TreeDataProvider<TreeItem
   private getCollectItems(): TreeItem[] {
     return [
       new TreeItem('Copy File for AI (Ctrl+Shift+C)', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.copyFileForAI',
+        command: 'codebreeze.copyFileForAI',
         title: 'Copy File for AI',
       }),
       new TreeItem('Copy Selection for AI', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.copySelectionForAI',
+        command: 'codebreeze.copySelectionForAI',
         title: 'Copy Selection for AI',
       }),
       new TreeItem('Copy Errors for AI', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.copyErrorsForAI',
+        command: 'codebreeze.copyErrorsForAI',
         title: 'Copy Errors for AI',
       }),
       new TreeItem('Copy Git Diff for AI', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.copyGitDiffForAI',
+        command: 'codebreeze.copyGitDiffForAI',
         title: 'Copy Git Diff',
       }),
       new TreeItem('Copy Git Log for AI', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.copyGitLogForAI',
+        command: 'codebreeze.copyGitLogForAI',
         title: 'Copy Git Log',
       }),
       new TreeItem('Run Build & Copy', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.runBuildAndCopy',
+        command: 'codebreeze.runBuildAndCopy',
         title: 'Run Build and Copy',
       }),
       new TreeItem('Run Tests & Copy', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.runTestAndCopy',
+        command: 'codebreeze.runTestAndCopy',
         title: 'Run Tests and Copy',
       }),
       new TreeItem('Copy Smart Context', vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.copySmartContext',
+        command: 'codebreeze.copySmartContext',
         title: 'Copy Smart Context',
       }),
     ];
@@ -104,7 +104,7 @@ export class AiBridgeSidebarProvider implements vscode.TreeDataProvider<TreeItem
     const { errors, warnings } = countDiagnostics();
     return [
       new TreeItem(`Errors: ${errors}  Warnings: ${warnings}`, vscode.TreeItemCollapsibleState.None, {
-        command: 'aibridge.copyErrorsForAI',
+        command: 'codebreeze.copyErrorsForAI',
         title: 'Copy Errors',
       }),
     ];

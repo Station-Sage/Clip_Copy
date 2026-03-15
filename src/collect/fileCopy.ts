@@ -9,7 +9,7 @@ export async function copyFileForAI(uri?: vscode.Uri): Promise<void> {
   if (!targetUri) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      vscode.window.showInformationMessage('AI Bridge: No file open');
+      vscode.window.showInformationMessage('CodeBreeze: No file open');
       return;
     }
     targetUri = editor.document.uri;
@@ -27,7 +27,7 @@ export async function copyFileForAI(uri?: vscode.Uri): Promise<void> {
 
   const markdown = formatCodeBlock(content, lang, relPath);
   await vscode.env.clipboard.writeText(markdown);
-  vscode.window.showInformationMessage(`AI Bridge: Copied ${relPath} to clipboard`);
+  vscode.window.showInformationMessage(`CodeBreeze: Copied ${relPath} to clipboard`);
 }
 
 export async function copyMultipleFilesForAI(uris: vscode.Uri[]): Promise<void> {
@@ -48,18 +48,18 @@ export async function copyMultipleFilesForAI(uris: vscode.Uri[]): Promise<void> 
   }
 
   if (parts.length === 0) {
-    vscode.window.showInformationMessage('AI Bridge: No files to copy');
+    vscode.window.showInformationMessage('CodeBreeze: No files to copy');
     return;
   }
 
   await vscode.env.clipboard.writeText(parts.join('\n\n'));
-  vscode.window.showInformationMessage(`AI Bridge: Copied ${parts.length} files to clipboard`);
+  vscode.window.showInformationMessage(`CodeBreeze: Copied ${parts.length} files to clipboard`);
 }
 
 export async function copySelectionForAI(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.selection.isEmpty) {
-    vscode.window.showInformationMessage('AI Bridge: No selection');
+    vscode.window.showInformationMessage('CodeBreeze: No selection');
     return;
   }
 
@@ -75,7 +75,7 @@ export async function copySelectionForAI(): Promise<void> {
 
   await vscode.env.clipboard.writeText(markdown);
   vscode.window.showInformationMessage(
-    `AI Bridge: Copied selection (lines ${startLine}-${endLine}) to clipboard`
+    `CodeBreeze: Copied selection (lines ${startLine}-${endLine}) to clipboard`
   );
 }
 

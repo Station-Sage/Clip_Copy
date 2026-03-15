@@ -6,12 +6,12 @@ import { formatCodeBlock } from '../utils/markdown';
 export async function copyErrorsForAI(): Promise<void> {
   const markdown = buildErrorsMarkdown();
   if (!markdown) {
-    vscode.window.showInformationMessage('AI Bridge: No errors/warnings found');
+    vscode.window.showInformationMessage('CodeBreeze: No errors/warnings found');
     return;
   }
 
   await vscode.env.clipboard.writeText(markdown);
-  vscode.window.showInformationMessage('AI Bridge: Errors copied to clipboard');
+  vscode.window.showInformationMessage('CodeBreeze: Errors copied to clipboard');
 }
 
 export function buildErrorsMarkdown(): string | null {

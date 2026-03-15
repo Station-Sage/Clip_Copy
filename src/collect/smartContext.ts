@@ -10,12 +10,12 @@ import { getLastBuildResult } from './localBuildCollector';
 export async function copySmartContext(): Promise<void> {
   const markdown = await buildSmartContext();
   if (!markdown) {
-    vscode.window.showInformationMessage('AI Bridge: No context available');
+    vscode.window.showInformationMessage('CodeBreeze: No context available');
     return;
   }
 
   await vscode.env.clipboard.writeText(markdown);
-  vscode.window.showInformationMessage('AI Bridge: Smart context copied to clipboard');
+  vscode.window.showInformationMessage('CodeBreeze: Smart context copied to clipboard');
 }
 
 export async function buildSmartContext(): Promise<string> {

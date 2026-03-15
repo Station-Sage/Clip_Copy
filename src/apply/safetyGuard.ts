@@ -18,7 +18,7 @@ export async function createUndoPoint(): Promise<UndoPoint | null> {
     // Try git stash
     const status = execSync('git status --porcelain', workspaceRoot);
     if (status.trim()) {
-      execSync('git stash push -m "ai-bridge-before-apply"', workspaceRoot);
+      execSync('git stash push -m "codebreeze-before-apply"', workspaceRoot);
       const stashList = execSync('git stash list --format="%gd"', workspaceRoot);
       const stashRef = stashList.split('\n')[0]?.trim() || 'stash@{0}';
       lastUndoPoint = { type: 'git_stash', stashRef, timestamp: Date.now() };
@@ -34,7 +34,7 @@ export async function createUndoPoint(): Promise<UndoPoint | null> {
 
 export async function undoLastApply(): Promise<boolean> {
   if (!lastUndoPoint) {
-    vscode.window.showInformationMessage('AI Bridge: No undo point available');
+    vscode.window.showInformationMessage('CodeBreeze: No undo point available');
     return false;
   }
 
@@ -44,12 +44,12 @@ export async function undoLastApply(): Promise<boolean> {
   if (lastUndoPoint.type === 'git_stash' && lastUndoPoint.stashRef) {
     try {
       execSync(`git stash pop ${lastUndoPoint.stashRef}`, workspaceRoot);
-      vscode.window.showInformationMessage('AI Bridge: Reverted to pre-apply state via git stash');
+      vscode.window.showInformationMessage('CodeBreeze: Reverted to pre-apply state via git stash');
       lastUndoPoint = null;
       return true;
     } catch (err) {
       vscode.window.showErrorMessage(
-        `AI Bridge: Could not undo: ${err instanceof Error ? err.message : String(err)}`
+        `CodeBreeze: Could not undo: ${err instanceof Error ? err.message : String(err)}`
       );
       return false;
     }
@@ -57,7 +57,7 @@ export async function undoLastApply(): Promise<boolean> {
 
   // For workspace_edit type, use VS Code's undo
   await vscode.commands.executeCommand('workbench.action.files.revert');
-  vscode.window.showInformationMessage('AI Bridge: Files reverted');
+  vscode.window.showInformationMessage('CodeBreeze: Files reverted');
   lastUndoPoint = null;
   return true;
 }
