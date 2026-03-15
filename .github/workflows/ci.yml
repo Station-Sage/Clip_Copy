@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'        # ← Node 20 → 22 (deprecated 경고 제거)
           cache: 'npm'
 
       - name: Install dependencies
@@ -35,12 +35,11 @@ jobs:
 
       - name: Package extension
         run: npx vsce package --no-dependencies
-        continue-on-error: true
 
       - name: Upload VSIX artifact
-        if: success()
+        if: always()               # ← success() → always() (항상 업로드 시도)
         uses: actions/upload-artifact@v4
         with:
-          name: ai-bridge-vsix
+          name: codebreeze-vsix    
           path: '*.vsix'
-          retention-days: 7
+          retention-days: 30       # ← 7일 → 30일
