@@ -44,7 +44,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerGitEventMonitor(context);
 
   // Update status bar on diagnostics change
-  onDiagnosticsChanged((errors, warnings) => {
+  onDiagnosticsChanged((errors, _warnings) => {
     if (errors > 0) {
       flashStatusBar(`${errors} error(s)`, 5000);
     }
@@ -64,6 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ['codebreeze.runTestAndCopy', () => runTestAndCopy()],
     ['codebreeze.copyLastBuildLog', () => copyLastBuildLog()],
     ['codebreeze.copyBuildLogFromGitHub', () => copyBuildLogFromGitHub()],
+    ['codebreeze.copyMultipleFilesForAI', (uris?: unknown) => copyMultipleFilesForAI((uris as vscode.Uri[]) || [])],
     ['codebreeze.copySmartContext', () => copySmartContext()],
     ['codebreeze.openChatPanel', () => openChatPanel()],
     ['codebreeze.openControlPanel', () => openControlPanel(context)],

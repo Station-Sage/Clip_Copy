@@ -110,7 +110,7 @@ export function copyLastBuildLog(): void {
   vscode.window.showInformationMessage('CodeBreeze: Last build log copied to clipboard');
 }
 
-function buildResultToMarkdown(result: BuildResult, workspaceRoot: string): string {
+function buildResultToMarkdown(result: BuildResult, _workspaceRoot: string): string {
   const status = result.exitCode === 0 ? 'SUCCESS' : 'FAILED';
   const lines: string[] = [
     `## Build Log (${result.command})`,
