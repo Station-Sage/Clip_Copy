@@ -20,7 +20,7 @@
 - 코드 블록 적용 전 diff 미리보기 (현재 파일 vs 적용 후) 표시
 - **상태**: 미구현
 
-- **I-004** (낮음, UX) 발견: 2026-03-15
-  - Marketplace용 아이콘(PNG 128x128) 미등록
-  - resources/icon.png 생성 후 package.json에 `"icon": "resources/icon.png"` 재추가 필요
-  - 상태: **미구현**
+## I-004: Marketplace 아이콘 등록
+- 발견: 2026-03-15 (낮음, UX)
+- resources/icon.png (128x128) 생성 후 package.json에 `"icon": "resources/icon.png"` 재추가 필요
+- **상태**: 미구현
