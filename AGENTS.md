@@ -8,10 +8,17 @@ https://github.com/Station-Sage/CodeBreeze
 1. .ai/index.md (라우터)
 2. BUGS.md (버그 현황)
 3. .ai/todo.md (할일)
+4. **.ai/branching.md** (브랜치 전략 - 필독!)
 
 ## 프로젝트
 CodeBreeze — AI챗(젠스파크, ChatGPT, Claude 등) ↔ VS Code 간 코드 전달 자동화 확장
 클립보드 기반 범용 설계, 특정 AI 서비스 비종속
+
+## ⚠️ 브랜치 전략 (중요!)
+- **작업 base**: `dev` 브랜치 (main 아님!)
+- **PR 대상**: `dev` 브랜치로 PR 생성
+- **CI**: 경량 CI (컴파일 + 린트만, 빠름)
+- 상세: `.ai/branching.md` 참조
 
 ## 기술 스택
 - 언어: TypeScript

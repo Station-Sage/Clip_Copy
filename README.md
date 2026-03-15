@@ -122,6 +122,53 @@ All commands are available via `Ctrl+Shift+P` → `CodeBreeze`:
 
 ---
 
+---
+
+## Development
+
+### Branch Strategy
+
+CodeBreeze uses a modified Git Flow strategy to minimize CI/CD overhead:
+
+- **`main`**: Production releases only (protected, tag-based)
+- **`dev`**: Integration branch for all development work
+- **`claude/**`**: Claude Code AI working branches
+- **`feature/**`**: Manual feature development
+- **`fix/**`**: Bug fixes (hotfix for critical issues)
+- **`release/**`**: Release preparation (optional, for major versions)
+
+**For contributors:**
+1. Create feature branches from `dev`
+2. Submit PR to `dev` (not `main`)
+3. Squash commits before merge (clean history)
+4. See `BRANCHING_STRATEGY.md` for full details
+
+### CI/CD Workflow
+
+| Branch | CI Action | Speed | Output |
+|--------|-----------|-------|--------|
+| `claude/**` | Lightweight (compile + lint) | ~2 min | - |
+| `dev` | Full CI (test + package) | ~5 min | **VSIX downloadable** (Actions → Artifacts) |
+| `main` (tags) | Release (GitHub Release) | ~5 min | Official VSIX (Releases page) |
+
+### Local Development
+
+```bash
+# Compile
+npm run compile
+
+# Run tests
+npm test
+
+# Lint
+npm run lint
+
+# Package VSIX
+npm run package
+```
+
+---
+
 ## License
 
 MIT
