@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { CodeBlock } from '../types';
 
 export function generateControlPanelHtml(
   webview: vscode.Webview,

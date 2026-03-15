@@ -20,7 +20,6 @@ export async function copySmartContext(): Promise<void> {
 
 export async function buildSmartContext(): Promise<string> {
   const parts: string[] = [];
-  const config = getConfig();
   const workspaceRoot = getWorkspaceRoot();
 
   // 1. Current file

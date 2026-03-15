@@ -80,6 +80,11 @@
         "category": "CodeBreeze"
       },
       {
+        "command": "codebreeze.copyMultipleFilesForAI",
+        "title": "Copy Multiple Files for AI",
+        "category": "CodeBreeze"
+      },
+      {
         "command": "codebreeze.copySmartContext",
         "title": "Copy Smart Context for AI",
         "category": "CodeBreeze"
@@ -154,6 +159,11 @@
         {
           "command": "codebreeze.copyFileForAI",
           "group": "codebreeze@1"
+        },
+        {
+          "command": "codebreeze.copyMultipleFilesForAI",
+          "group": "codebreeze@2",
+          "when": "listMultipleSelection"
         }
       ],
       "editor/context": [
@@ -270,7 +280,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
     "test": "node ./out/test/runTests.js",
-    "lint": "eslint src --ext ts",
+    "lint": "./node_modules/.bin/eslint src --ext ts",
     "package": "vsce package"
   },
   "dependencies": {
