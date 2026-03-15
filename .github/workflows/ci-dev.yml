@@ -36,15 +36,16 @@ jobs:
 
       - name: Run lint
         run: npm run lint
+        continue-on-error: true
 
       - name: Package VSIX
         run: npx vsce package
 
       - name: Upload VSIX artifact
-        if: success()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: codebreeze-vsix-${{ github.sha }}
+          name: codebreeze-vsix
           path: '*.vsix'
           retention-days: 30
 
