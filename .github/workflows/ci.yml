@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -34,13 +34,24 @@ jobs:
         continue-on-error: true
 
       - name: Package extension
-        run: npx vsce package --no-dependencies
-        continue-on-error: true
+        run: npx vsce package
 
       - name: Upload VSIX artifact
-        if: success()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ai-bridge-vsix
+          name: codebreeze-vsix
           path: '*.vsix'
-          retention-days: 7
+          retention-days: 30
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v0.1.0
+          name: v0.1.0-dev
+          files: '*.vsix'
+          prerelease: true
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

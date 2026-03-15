@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import { formatCodeBlock, truncateLines } from '../utils/markdown';
 import { getConfig } from '../config';
 

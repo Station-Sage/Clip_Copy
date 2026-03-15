@@ -19,16 +19,24 @@ export async function copyBuildLogFromGitHub(): Promise<void> {
   }
 
   const config = getConfig();
-  if (!config.githubToken || !config.githubRepo) {
+  if (!config.githubRepo) {
     vscode.window.showErrorMessage(
-      'CodeBreeze: Set codebreeze.githubToken and codebreeze.githubRepo in settings'
+      'CodeBreeze: Set codebreeze.githubRepo in settings (e.g. "owner/repo")'
     );
     return;
   }
 
+  // Token is optional — public repos work without it; private repos require it
+  const token = config.githubToken || '';
+  if (!token) {
+    vscode.window.showInformationMessage(
+      'CodeBreeze: No GitHub token set — trying public API (rate limited to 60 req/hr)'
+    );
+  }
+
   try {
     vscode.window.showInformationMessage('CodeBreeze: Fetching GitHub Actions logs...');
-    const log = await fetchFailedJobLog(config.githubToken, config.githubRepo);
+    const log = await fetchFailedJobLog(token, config.githubRepo);
 
     if (!log) {
       vscode.window.showInformationMessage('CodeBreeze: No failed workflow runs found');
@@ -92,16 +100,23 @@ async function fetchFailedJobLog(token: string, repo: string): Promise<string | 
   ].join('\n');
 }
 
+function buildHeaders(token: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    'User-Agent': 'codebreeze-vscode',
+    Accept: 'application/vnd.github.v3+json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 function githubGet(path: string, token: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'api.github.com',
       path,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'User-Agent': 'codebreeze-vscode',
-        Accept: 'application/vnd.github.v3+json',
-      },
+      headers: buildHeaders(token),
     };
 
     https.get(options, (res) => {
@@ -123,17 +138,12 @@ function githubGetBuffer(path: string, token: string): Promise<Buffer> {
     const options = {
       hostname: 'api.github.com',
       path,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'User-Agent': 'codebreeze-vscode',
-        Accept: 'application/vnd.github.v3+json',
-      },
+      headers: buildHeaders(token),
     };
 
     https.get(options, (res) => {
       // Handle redirect
       if (res.statusCode === 302 && res.headers.location) {
-        const url = new URL(res.headers.location);
         https.get(res.headers.location, (res2) => {
           const chunks: Buffer[] = [];
           res2.on('data', (chunk: Buffer) => chunks.push(chunk));

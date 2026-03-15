@@ -26,23 +26,25 @@ export function registerGitEventMonitor(context: vscode.ExtensionContext): void 
     const git = gitExt.exports?.getAPI?.(1);
     if (!git) return;
 
-    const setupRepo = (repo: { state: { onDidChange: (cb: () => void) => vscode.Disposable; HEAD?: { name?: string } }}) => {
+    const setupRepo = (repo: { state: { onDidChange: (cb: () => void) => vscode.Disposable; HEAD?: { name?: string; commit?: string } }}) => {
       let prevBranch = repo.state.HEAD?.name;
-      let prevCommit = '';
+      let prevCommit = repo.state.HEAD?.commit || '';
 
       const sub = repo.state.onDidChange(() => {
         const config = getConfig();
         if (config.autoLevel === 'off') return;
 
         const currentBranch = repo.state.HEAD?.name;
+        const currentCommit = repo.state.HEAD?.commit || '';
 
         if (currentBranch !== prevBranch) {
           prevBranch = currentBranch;
           listeners.forEach((cb) => cb('branch'));
           vscode.window.showInformationMessage(`CodeBreeze: Switched to branch "${currentBranch}"`);
-        } else {
-          // Could be a commit - notify
+        } else if (currentCommit && currentCommit !== prevCommit) {
+          prevCommit = currentCommit;
           listeners.forEach((cb) => cb('commit'));
+          vscode.window.showInformationMessage(`CodeBreeze: New commit on "${currentBranch}"`);
         }
       });
 
