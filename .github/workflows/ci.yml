@@ -34,7 +34,7 @@ jobs:
         continue-on-error: true
 
       - name: Package extension
-        run: npx vsce package --no-dependencies
+        run: npx vsce package 
 
       - name: Upload VSIX artifact
         if: always()               # ← success() → always() (항상 업로드 시도)
