@@ -1,0 +1,297 @@
+{
+  "name": "ai-bridge",
+  "displayName": "AI Bridge",
+  "description": "Automate code transfer between AI chats (Genspark, ChatGPT, etc.) and VS Code via clipboard",
+  "version": "0.1.0",
+  "publisher": "station-sage",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "ai",
+    "clipboard",
+    "code",
+    "genspark",
+    "chatgpt",
+    "automation"
+  ],
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Station-Sage/Clip_Copy"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aibridge.applyFromClipboard",
+        "title": "Apply Code from Clipboard",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copyFileForAI",
+        "title": "Copy File for AI",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copySelectionForAI",
+        "title": "Copy Selection for AI",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copyGitDiffForAI",
+        "title": "Copy Git Diff for AI",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copyGitLogForAI",
+        "title": "Copy Git Log for AI",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copyErrorsForAI",
+        "title": "Copy Errors for AI",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copyBuildLogFromGitHub",
+        "title": "Copy Build Log from GitHub",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.runBuildAndCopy",
+        "title": "Run Build and Copy Log",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.runTestAndCopy",
+        "title": "Run Test and Copy Log",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copyLastBuildLog",
+        "title": "Copy Last Build Log",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.copySmartContext",
+        "title": "Copy Smart Context for AI",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.undoLastApply",
+        "title": "Undo Last Apply",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.openChatPanel",
+        "title": "Open AI Chat",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.openControlPanel",
+        "title": "Open AI Bridge Control Panel",
+        "category": "AI Bridge"
+      },
+      {
+        "command": "aibridge.refreshSidebar",
+        "title": "Refresh",
+        "category": "AI Bridge",
+        "icon": "$(refresh)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "aibridge.applyFromClipboard",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      },
+      {
+        "command": "aibridge.copyFileForAI",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "editorFocus"
+      },
+      {
+        "command": "aibridge.openControlPanel",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ai-bridge",
+          "title": "AI Bridge",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ai-bridge": [
+        {
+          "id": "aiBridgeSidebar",
+          "name": "AI Bridge",
+          "type": "tree"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "aibridge.refreshSidebar",
+          "when": "view == aiBridgeSidebar",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "aibridge.copyFileForAI",
+          "group": "aibridge@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "aibridge.copySelectionForAI",
+          "group": "aibridge@1",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "aibridge.copyFileForAI",
+          "group": "aibridge@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI Bridge",
+      "properties": {
+        "aibridge.filePathPattern": {
+          "type": "string",
+          "default": "",
+          "description": "Custom regex pattern for extracting file paths from code block headers (leave empty to use default)"
+        },
+        "aibridge.sourceRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Default source root path within the workspace (e.g. 'src')"
+        },
+        "aibridge.gitDiffMode": {
+          "type": "string",
+          "enum": [
+            "staged",
+            "unstaged",
+            "both"
+          ],
+          "default": "unstaged",
+          "description": "Default git diff mode"
+        },
+        "aibridge.githubToken": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub Personal Access Token for fetching remote build logs (optional, local builds are preferred)"
+        },
+        "aibridge.githubRepo": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub repository in owner/repo format (e.g. 'octocat/hello-world')"
+        },
+        "aibridge.contextLines": {
+          "type": "number",
+          "default": 15,
+          "description": "Number of lines to include around error locations when copying context"
+        },
+        "aibridge.chunkMaxLines": {
+          "type": "number",
+          "default": 200,
+          "description": "Maximum lines per chunk when splitting large files"
+        },
+        "aibridge.watchClipboard": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show notification when clipboard contains code blocks"
+        },
+        "aibridge.gitLogCount": {
+          "type": "number",
+          "default": 10,
+          "description": "Number of recent git log entries to include"
+        },
+        "aibridge.buildCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm run build"
+          ],
+          "description": "Local build commands to run (first one is used by default)"
+        },
+        "aibridge.testCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm test"
+          ],
+          "description": "Local test commands to run (first one is used by default)"
+        },
+        "aibridge.chatUrl": {
+          "type": "string",
+          "default": "https://www.genspark.ai/agents?type=ai_chat",
+          "description": "URL to open for AI chat (used by Open AI Chat command)"
+        },
+        "aibridge.autoLevel": {
+          "type": "string",
+          "enum": [
+            "off",
+            "notify",
+            "auto"
+          ],
+          "default": "notify",
+          "description": "Automation level: off=manual only, notify=show notification on events, auto=update panel automatically"
+        },
+        "aibridge.autoWatchClipboard": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically watch clipboard for code blocks when control panel is open"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTests.js",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "diff": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
+    "@types/diff": "^5.0.9",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.0.0",
+    "eslint": "^8.0.0",
+    "mocha": "^10.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}
