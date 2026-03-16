@@ -354,7 +354,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
-    "@types/ws": "^8.18.1",
     "adm-zip": "^0.5.10",
     "diff": "^5.1.0",
     "ws": "^8.19.0"
@@ -363,6 +362,7 @@
     "@types/adm-zip": "^0.5.5",
     "@types/diff": "^5.0.9",
     "@types/glob": "^8.1.0",
+    "@types/ws": "^8.18.1",
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",

@@ -111,7 +111,7 @@ export function stopWsBridge(): void {
     vscode.window.showInformationMessage('CodeBreeze: Browser bridge is not running');
     return;
   }
-  connections.forEach((ws) => ws.close());
+  connections.forEach((ws) => ws.terminate());
   connections = [];
   wss?.close();
   wss = undefined;
