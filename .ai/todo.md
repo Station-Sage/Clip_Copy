@@ -1,3 +1,25 @@
+# 할일 (2026-03-17)
+
+## 진행 중 — Phase 4 브라우저 확장
+- [x] Task 1: bridgeProtocol.ts 신규 생성 + wsBridgeServer.ts 프로토콜 확장
+- [x] Task 2: browser-extension/ 스캐폴딩 (manifest.json, popup.html/js)
+- [x] Task 3: content.js — 5개 AI챗 사이트 코드 블록 감지
+- [x] Task 4: background.js — WebSocket 연결 + 지수 백오프 재연결
+- [x] Task 5: chatPanelHtml.ts Bridge 탭 UI + chatPanel.ts 핸들러
+- [x] Task 6: agentLoop.ts — 빌드→에러→AI재전송 자동 루프 (최대 5회)
+- [x] Task 7: 테스트 + getConnectionCount 추가
+
+## 남은 검증 작업
+- [ ] npm run compile 에러 없음 확인
+- [ ] npm run lint 통과
+- [ ] npm test — 기존 56개 + 신규 테스트 통과
+- [ ] Collect 흐름 테스트: Ctrl+Shift+C → 클립보드에 마크다운 포맷 확인
+- [ ] git diff/log 수집 테스트
+- [ ] 컨트롤 패널(Ctrl+Shift+I) WebView 로드 확인
+- [ ] Bridge 탭 UI 렌더링 확인
+- [ ] code-server 환경 실제 테스트 (clipboardCompat 폴백 검증)
+- [ ] 브라우저 확장 Chrome 로드 테스트
+
 # 할일 (2026-03-16)
 
 ## 완료
@@ -37,22 +59,18 @@
 - [x] patchApplier: temp 파일 유니크화 (B-008) — 2026-03-17
 - [ ] localBuildCollector: 다양한 빌드 도구 에러 포맷 파싱
 - [ ] MCP 서버 실제 연결 테스트 (Claude Desktop / Cursor)
-- [ ] WebSocket 브릿지 브라우저 확장 개발 (Phase 4 클라이언트 측)
+- [x] WebSocket 브릿지 브라우저 확장 개발 (Phase 4 클라이언트 측) — 2026-03-17
 
 ## 미구현 개선사항
 - [ ] I-004: Marketplace용 아이콘 PNG 등록
 - [ ] MCP transport per-request 패턴 (현재 단일 transport 재사용, stateless 완전 지원 시 변경)
+- [ ] browser-extension/icons/ placeholder 아이콘 추가
 - [x] I-001: code-server 클립보드 폴백 — 2026-03-15 완료
 - [x] I-002: 프로젝트 맵 자동 생성 (AST) — 2026-03-15 완료
 - [x] I-003: 컨트롤 패널 diff 미리보기 — 2026-03-15 완료
-
-## 신규 구현 (2026-03-15)
-- [x] Phase 3: MCP 서버 모드 (src/mcp/mcpServer.ts) — 포트 3700, 9개 도구
-- [x] Phase 4: 브라우저 WebSocket 브릿지 (src/bridge/wsBridgeServer.ts) — 포트 3701
-- [x] 유닛 테스트 3개 파일 추가 (25 tests: projectMapCollector, diffPreview, mcpServer)
-- [x] fix/bug-batch-01 머지 (squash) — 컨트롤 패널 열기 오류 수정
 
 ## Android 태블릿 테스트 방안
 - VS Code Extension은 Electron 기반이라 Android 직접 실행 불가
 - **권장**: code-server (브라우저에서 VS Code 접근) → clipboardCompat 폴백 사용
 - 대안: GitHub Codespaces, Termux+code-server
+s

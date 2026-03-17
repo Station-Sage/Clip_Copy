@@ -153,11 +153,63 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           }
           break;
         }
+
+        case 'startBridge':
+          await vscode.commands.executeCommand('codebreeze.startWsBridge');
+          await sendBridgeStatus(webview);
+          break;
+
+        case 'stopBridge':
+          await vscode.commands.executeCommand('codebreeze.stopWsBridge');
+          await sendBridgeStatus(webview);
+          break;
+
+        case 'bridgeSendToAI': {
+          const { broadcastToBrowser, isWsBridgeRunning } = await import('../bridge/wsBridgeServer');
+          if (!isWsBridgeRunning()) {
+            vscode.window.showWarningMessage('CodeBreeze: Bridge not running. Start it first.');
+            break;
+          }
+          broadcastToBrowser({ type: 'send_to_ai', payload: msg.payload, autoSend: true });
+          break;
+        }
+
+        case 'bridgeSendContext': {
+          const contextPayload = await buildContextPayload(['file', 'errors', 'gitDiff']);
+          if (contextPayload) {
+            const { broadcastToBrowser, isWsBridgeRunning } = await import('../bridge/wsBridgeServer');
+            if (isWsBridgeRunning()) {
+              broadcastToBrowser({ type: 'send_to_ai', payload: contextPayload, autoSend: true });
+              webview.postMessage({ command: 'bridgeUserSent', text: '[Smart Context sent]' });
+            }
+          }
+          break;
+        }
+
+        case 'startAgentLoop': {
+          const { startAgentLoop } = await import('../bridge/agentLoop');
+          await startAgentLoop(webview);
+          break;
+        }
       }
     },
     undefined,
     context.subscriptions
   );
+}
+
+async function sendBridgeStatus(webview: vscode.Webview): Promise<void> {
+  try {
+    const { isWsBridgeRunning, getWsBridgePort, getConnectionCount } = await import('../bridge/wsBridgeServer');
+    webview.postMessage({
+      command: 'bridgeStatus',
+      running: isWsBridgeRunning(),
+      port: getWsBridgePort(),
+      clients: getConnectionCount?.() ?? 0,
+    });
+  } catch {
+    webview.postMessage({ command: 'bridgeStatus', running: false, port: 3701, clients: 0 });
+  }
 }
 
 export async function openChatPanel(): Promise<void> {
@@ -166,9 +218,16 @@ export async function openChatPanel(): Promise<void> {
 }
 
 export async function openControlPanel(_context: vscode.ExtensionContext): Promise<void> {
-  await vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
-  await vscode.commands.executeCommand('codebreezePanelView.focus');
+  await vscode.commands.executeCommand('workbench.action.focusAuxiliaryBar');
+  setTimeout(async () => {
+    try {
+      await vscode.commands.executeCommand('codebreezePanelView.focus');
+    } catch {
+      // 뷰 초기화 전일 수 있음
+    }
+  }, 500);
 }
+
 
 async function refreshClipboardBlocks(): Promise<void> {
   if (!panelWebview) return;
@@ -218,7 +277,6 @@ function startClipboardWatch(): void {
               .then((choice) => {
                 if (choice === 'Open Panel') {
                   vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
-                  vscode.commands.executeCommand('codebreezePanelView.focus');
                 }
               });
           }
