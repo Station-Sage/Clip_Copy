@@ -2,6 +2,18 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+### 2026-03-17 — Cursor-like 자동화 개선 (Phase 6)
+- **에러 체인 추적**: `errorChainCollector.ts` 신규 — import/require 체인 추적 (ES, CommonJS, Python, C/C++, Go, Rust), 순환 참조 방지, 설정 가능한 깊이 (`errorChainDepth`)
+- **청크 분할**: `chunkSplitter.ts` 신규 — 함수/클래스/인터페이스 경계 감지 (7개 언어), `fileCopy.ts`에 `buildChunkedFileMarkdown()` 추가
+- **인라인 diff 적용**: `diffRangeCalculator.ts` + `inlineDiffApply.ts` 신규 — 변경된 줄만 교체 (전체 파일 교체 대체), `applyMode` 설정 (`inline`/`wholefile`)
+- **Agent Loop 개선**: 테스트 명령 자동 실행, 동일 에러 2회 반복 시 조기 종료, 설정 가능한 타임아웃, 에러 체인 컨텍스트 전송, Stop 버튼 UI 연동
+- **chatPanelHtml.ts 분할**: 644줄 → `chatPanelStyles.ts` (~170줄) + `chatPanelScript.ts` (~280줄) + `chatPanelHtml.ts` (~130줄)
+- **새 설정 4개**: `applyMode`, `agentLoopTimeout`, `streamingDebounceMs`, `errorChainDepth`
+- **크로스 플랫폼**: `localBuildCollector.ts` `path.join()` 사용 (Windows 경로 호환)
+- **타입**: `Chunk` 인터페이스 추가 (`types.ts`)
+- **테스트**: 37개 신규 (errorChainCollector 14, chunkSplitter 13, inlineDiffApply 8, 기존 2 추가) — 전체 102개 통과
+- **설계 결정**: D13 (applyMode inline 기본), D14 (errorChainDepth 설정)
+
 ### 2026-03-17 — 컨트롤 패널 수정, 빌드 파서 개선, 아이콘 및 CRX 아티팩트
 - **컨트롤 패널 수정**: `secondarySidebar` (proposed API) → `panel` (하단 패널) 이동. "Drag a view here" 이슈 해결
 - **컴파일 에러 수정**: chatPanel.ts 중복 `sendBridgeStatus`, wsBridgeServer.ts 중복 `getConnectionCount` 제거

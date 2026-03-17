@@ -191,6 +191,12 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           await startAgentLoop(webview);
           break;
         }
+
+        case 'stopAgentLoop': {
+          const { stopAgentLoop } = await import('../bridge/agentLoop');
+          stopAgentLoop();
+          break;
+        }
       }
     },
     undefined,

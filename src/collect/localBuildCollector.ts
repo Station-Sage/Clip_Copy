@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { spawnAsync } from '../utils/exec';
 import { getConfig, getWorkspaceRoot } from '../config';
 import { BuildResult, ParsedError } from '../types';
@@ -144,7 +145,7 @@ function buildResultToMarkdown(result: BuildResult, _workspaceRoot: string): str
 function parseErrors(output: string, workspaceRoot: string): ParsedError[] {
   return parseErrorOutput(output).map((info) => ({
     ...info,
-    codeContext: getCodeContext(`${workspaceRoot}/${info.filePath}`, info.line, 5) || undefined,
+    codeContext: getCodeContext(path.join(workspaceRoot, info.filePath), info.line, 5) || undefined,
   }));
 }
 
