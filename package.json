@@ -347,6 +347,33 @@
           "minimum": 1,
           "maximum": 20,
           "description": "Maximum number of iterations for the Agent Loop (build → error → AI fix cycle)"
+        },
+        "codebreeze.applyMode": {
+          "type": "string",
+          "enum": ["wholefile", "inline"],
+          "default": "inline",
+          "description": "How to apply code blocks: 'wholefile' replaces entire file, 'inline' applies only changed ranges (partial edit)"
+        },
+        "codebreeze.agentLoopTimeout": {
+          "type": "number",
+          "default": 300,
+          "minimum": 30,
+          "maximum": 1800,
+          "description": "Timeout in seconds for waiting for AI response during agent loop"
+        },
+        "codebreeze.streamingDebounceMs": {
+          "type": "number",
+          "default": 1500,
+          "minimum": 500,
+          "maximum": 10000,
+          "description": "Debounce interval (ms) for streaming clipboard/diagnostics updates"
+        },
+        "codebreeze.errorChainDepth": {
+          "type": "number",
+          "default": 2,
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Depth of import chain tracing from error files (0=disabled, higher=more context)"
         }
       }
     }
