@@ -2,6 +2,16 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+### 2026-03-17 — 컨트롤 패널 수정, 빌드 파서 개선, 아이콘 및 CRX 아티팩트
+- **컨트롤 패널 수정**: `secondarySidebar` (proposed API) → `panel` (하단 패널) 이동. "Drag a view here" 이슈 해결
+- **컴파일 에러 수정**: chatPanel.ts 중복 `sendBridgeStatus`, wsBridgeServer.ts 중복 `getConnectionCount` 제거
+- **localBuildCollector 개선**: GCC/Clang, Java/Kotlin, Python traceback, Gradle/Maven, Swift 에러 포맷 파서 추가 + 중복 제거
+- **Agent Loop 설정화**: `codebreeze.agentLoopMaxIterations` 설정 추가 (1-20, 기본 5). `MAX_AGENT_LOOP_ITERATIONS` → `DEFAULT_AGENT_LOOP_MAX_ITERATIONS` 이름 변경
+- **I-004 구현**: `resources/icon.png` (128x128) 생성, package.json `"icon"` 필드 추가
+- **browser-extension/icons/**: icon16/48/128.png 생성
+- **CRX 빌드**: `scripts/build-browser-ext.js` 추가, `npm run build:browser-ext`로 `dist/codebreeze-bridge.crx` + `.zip` 생성
+- **린트 정리**: agentLoop.ts 미사용 `parseClipboard` import 제거
+
 ### 2026-03-17 — Phase 4 브라우저 확장 구현
 - **브라우저 확장** (browser-extension/): Chrome Manifest V3, 5개 AI챗 사이트 지원
   - content.js (~180줄): MutationObserver 기반 코드 블록 감지, AI챗 입력창 자동화

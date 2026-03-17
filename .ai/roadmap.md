@@ -76,11 +76,17 @@ UI 확장
 chatPanelHtml.ts: Bridge 탭 추가 (대화 히스토리, 입력창, Agent Loop 버튼)
 chatPanel.ts: Bridge 관련 메시지 핸들러 (startBridge, stopBridge, bridgeSendToAI, bridgeSendContext, startAgentLoop)
 
-남은 작업 (구현 후보)
- browser-extension/icons/ placeholder 아이콘 추가
- Firefox 확장 호환 (manifest V2 변환)
- 브라우저 확장 Chrome Web Store 배포
- Agent Loop 반복 횟수 설정화 (codebreeze.agentLoopMaxIterations)
+### 완료 (2026-03-17)
+- [x] browser-extension/icons/ 아이콘 생성 (16/48/128px PNG)
+- [x] Agent Loop 반복 횟수 설정화 (`codebreeze.agentLoopMaxIterations`, 1-20, 기본 5)
+- [x] CRX/ZIP 빌드 스크립트 (`scripts/build-browser-ext.js`, `npm run build:browser-ext`)
+- [x] 컨트롤 패널 secondarySidebar → panel 이동 (WebView 로드 이슈 해결)
+- [x] localBuildCollector 다양한 빌드 도구 에러 포맷 파서 추가 (GCC/Clang, Java/Kotlin, Python, Gradle/Maven, Swift)
+- [x] I-004: Marketplace 아이콘 등록 (`resources/icon.png`)
+
+### 남은 작업 (구현 후보)
+- [ ] Firefox 확장 호환 (manifest V2 변환)
+- [ ] 브라우저 확장 Chrome Web Store 배포
 
 ## Phase 5: code-server 완전 호환 ✅ 완료 (2026-03-16)
 ### 구현 내용
