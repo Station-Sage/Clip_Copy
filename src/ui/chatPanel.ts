@@ -212,6 +212,20 @@ async function sendBridgeStatus(webview: vscode.Webview): Promise<void> {
   }
 }
 
+async function sendBridgeStatus(webview: vscode.Webview): Promise<void> {
+  try {
+    const { isWsBridgeRunning, getWsBridgePort, getConnectionCount } = await import('../bridge/wsBridgeServer');
+    webview.postMessage({
+      command: 'bridgeStatus',
+      running: isWsBridgeRunning(),
+      port: getWsBridgePort(),
+      clients: getConnectionCount?.() ?? 0,
+    });
+  } catch {
+    webview.postMessage({ command: 'bridgeStatus', running: false, port: 3701, clients: 0 });
+  }
+}
+
 export async function openChatPanel(): Promise<void> {
   const config = getConfig();
   await vscode.env.openExternal(vscode.Uri.parse(config.chatUrl));

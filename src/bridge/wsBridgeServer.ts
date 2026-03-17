@@ -223,3 +223,7 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
       break;
   }
 }
+
+export function getConnectionCount(): number {
+  return connections.length;
+}
