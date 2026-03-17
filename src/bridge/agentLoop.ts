@@ -2,12 +2,11 @@
 
 import * as vscode from 'vscode';
 import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
-import { parseClipboard } from '../apply/markdownParser';
 import { buildContextPayload } from '../collect/smartContext';
 import { getConfig } from '../config';
 import { countDiagnostics } from '../monitor/diagnosticsMonitor';
 import { CodeBlock } from '../types';
-import { MAX_AGENT_LOOP_ITERATIONS } from './bridgeProtocol';
+import { DEFAULT_AGENT_LOOP_MAX_ITERATIONS } from './bridgeProtocol';
 
 interface AgentLoopState {
   active: boolean;
@@ -68,12 +67,15 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
   state.iteration = 0;
   state.webview = webview;
 
-  notify(`🔄 Agent loop started (max ${MAX_AGENT_LOOP_ITERATIONS} iterations)`);
+  const cfg = vscode.workspace.getConfiguration('codebreeze');
+  const maxIterations = cfg.get<number>('agentLoopMaxIterations') ?? DEFAULT_AGENT_LOOP_MAX_ITERATIONS;
+
+  notify(`🔄 Agent loop started (max ${maxIterations} iterations)`);
 
   try {
-    for (let i = 0; i < MAX_AGENT_LOOP_ITERATIONS; i++) {
+    for (let i = 0; i < maxIterations; i++) {
       state.iteration = i + 1;
-      notify(`--- Iteration ${state.iteration}/${MAX_AGENT_LOOP_ITERATIONS} ---`);
+      notify(`--- Iteration ${state.iteration}/${maxIterations} ---`);
 
       // Step 1: 빌드 실행
       notify('🔨 Running build...');

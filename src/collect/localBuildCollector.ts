@@ -142,23 +142,40 @@ function buildResultToMarkdown(result: BuildResult, _workspaceRoot: string): str
 
 function parseErrors(output: string, workspaceRoot: string): ParsedError[] {
   const errors: ParsedError[] = [];
-  const patterns = [
-    // TypeScript: src/file.ts(42,5): error TS2345
-    /^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+(.+)$/gm,
-    // Generic: src/file.ts:42:5: error: ...
-    /^(.+?):(\d+):(\d+):\s+(error|warning|note):\s+(.+)$/gm,
+  const seen = new Set<string>();
+
+  const patterns: { regex: RegExp; fileIdx: number; lineIdx: number; sevIdx: number | null; msgIdx: number | null }[] = [
+    // TypeScript: src/file.ts(42,5): error TS2345: message
+    { regex: /^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+(.+)$/gm, fileIdx: 1, lineIdx: 2, sevIdx: 4, msgIdx: 5 },
+    // ESLint/Generic: src/file.ts:42:5: error: ...
+    { regex: /^(.+?):(\d+):(\d+):\s+(error|warning|note):\s+(.+)$/gm, fileIdx: 1, lineIdx: 2, sevIdx: 4, msgIdx: 5 },
+    // GCC/Clang: src/file.c:42:5: error: undeclared identifier
+    { regex: /^(.+?\.[ch](?:pp|xx)?):(\d+):(\d+):\s+(error|warning|fatal error):\s+(.+)$/gm, fileIdx: 1, lineIdx: 2, sevIdx: 4, msgIdx: 5 },
+    // Java/Kotlin: src/File.java:42: error: ...
+    { regex: /^(.+?\.(?:java|kt|kts)):(\d+):\s+(error|warning):\s+(.+)$/gm, fileIdx: 1, lineIdx: 2, sevIdx: 3, msgIdx: 4 },
+    // Python traceback: File "src/file.py", line 42
+    { regex: /^\s*File "(.+?)", line (\d+)/gm, fileIdx: 1, lineIdx: 2, sevIdx: null, msgIdx: null },
     // Rust/Go: --> src/file.rs:42:5
-    /^.*?-->\s+(.+?):(\d+):(\d+)$/gm,
+    { regex: /^.*?-->\s+(.+?):(\d+):(\d+)$/gm, fileIdx: 1, lineIdx: 2, sevIdx: null, msgIdx: null },
+    // Gradle/Maven: e: file:///path/File.kt:42:5 message
+    { regex: /^e:\s+(?:file:\/\/)?(.+?):(\d+):(\d+)\s+(.+)$/gm, fileIdx: 1, lineIdx: 2, sevIdx: null, msgIdx: 4 },
+    // Swift: src/file.swift:42:5: error: ...
+    { regex: /^(.+?\.swift):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm, fileIdx: 1, lineIdx: 2, sevIdx: 4, msgIdx: 5 },
   ];
 
-  for (const pattern of patterns) {
+  for (const { regex, fileIdx, lineIdx, sevIdx, msgIdx } of patterns) {
     let match: RegExpExecArray | null;
-    pattern.lastIndex = 0;
-    while ((match = pattern.exec(output)) !== null) {
-      const filePath = match[1].trim();
-      const line = parseInt(match[2], 10);
-      const severity = (match[4] || 'error').includes('warn') ? 'warning' : 'error';
-      const message = match[5]?.trim() || '';
+    regex.lastIndex = 0;
+    while ((match = regex.exec(output)) !== null) {
+      const filePath = match[fileIdx].trim();
+      const line = parseInt(match[lineIdx], 10);
+      const sevRaw = sevIdx !== null ? match[sevIdx] : 'error';
+      const severity = (sevRaw || 'error').includes('warn') ? 'warning' : 'error';
+      const message = msgIdx !== null ? (match[msgIdx]?.trim() || '') : '';
+
+      const key = `${filePath}:${line}:${message}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
 
       const context = getCodeContext(`${workspaceRoot}/${filePath}`, line, 5);
       errors.push({ filePath, line, message, severity, codeContext: context || undefined });

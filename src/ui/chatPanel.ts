@@ -212,34 +212,19 @@ async function sendBridgeStatus(webview: vscode.Webview): Promise<void> {
   }
 }
 
-async function sendBridgeStatus(webview: vscode.Webview): Promise<void> {
-  try {
-    const { isWsBridgeRunning, getWsBridgePort, getConnectionCount } = await import('../bridge/wsBridgeServer');
-    webview.postMessage({
-      command: 'bridgeStatus',
-      running: isWsBridgeRunning(),
-      port: getWsBridgePort(),
-      clients: getConnectionCount?.() ?? 0,
-    });
-  } catch {
-    webview.postMessage({ command: 'bridgeStatus', running: false, port: 3701, clients: 0 });
-  }
-}
-
 export async function openChatPanel(): Promise<void> {
   const config = getConfig();
   await vscode.env.openExternal(vscode.Uri.parse(config.chatUrl));
 }
 
 export async function openControlPanel(_context: vscode.ExtensionContext): Promise<void> {
-  await vscode.commands.executeCommand('workbench.action.focusAuxiliaryBar');
-  setTimeout(async () => {
-    try {
-      await vscode.commands.executeCommand('codebreezePanelView.focus');
-    } catch {
-      // 뷰 초기화 전일 수 있음
-    }
-  }, 500);
+  try {
+    await vscode.commands.executeCommand('codebreezePanelView.focus');
+  } catch {
+    vscode.window.showWarningMessage(
+      'CodeBreeze: Control panel not found. Check the bottom Panel area for the CodeBreeze tab.'
+    );
+  }
 }
 
 
@@ -290,7 +275,7 @@ function startClipboardWatch(): void {
               )
               .then((choice) => {
                 if (choice === 'Open Panel') {
-                  vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
+                  vscode.commands.executeCommand('codebreezePanelView.focus');
                 }
               });
           }
