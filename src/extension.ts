@@ -12,8 +12,6 @@ import { runBuildAndCopy, runTestAndCopy, copyLastBuildLog } from './collect/loc
 import { copyBuildLogFromGitHub } from './collect/githubLogCollector';
 import { copySmartContext } from './collect/smartContext';
 import { copyProjectMap } from './collect/projectMapCollector';
-import { startMcpServer, stopMcpServer } from './mcp/mcpServer';
-import { startWsBridge, stopWsBridge } from './bridge/wsBridgeServer';
 import { showManualPastePanel } from './utils/clipboardCompat';
 
 // UI
@@ -65,6 +63,22 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Register all commands
   const commands: [string, (...args: unknown[]) => unknown][] = [
+    ['codebreeze.startMcpServer', async () => {
+      const { startMcpServer } = await import('./mcp/mcpServer');
+      return startMcpServer(context);
+    }],
+    ['codebreeze.stopMcpServer', async () => {
+      const { stopMcpServer } = await import('./mcp/mcpServer');
+      return stopMcpServer();
+    }],
+    ['codebreeze.startWsBridge', async () => {
+      const { startWsBridge } = await import('./bridge/wsBridgeServer');
+      return startWsBridge(context);
+    }],
+    ['codebreeze.stopWsBridge', async () => {
+      const { stopWsBridge } = await import('./bridge/wsBridgeServer');
+      return stopWsBridge();
+    }],
     ['codebreeze.applyFromClipboard', () => applyFromClipboard()],
     ['codebreeze.undoLastApply', () => undoLastApply()],
     ['codebreeze.copyFileForAI', (uri?: unknown) => copyFileForAI(uri as vscode.Uri | undefined)],
@@ -79,10 +93,6 @@ export function activate(context: vscode.ExtensionContext): void {
     ['codebreeze.copyMultipleFilesForAI', (uris?: unknown) => copyMultipleFilesForAI((uris as vscode.Uri[]) || [])],
     ['codebreeze.copySmartContext', () => copySmartContext()],
     ['codebreeze.copyProjectMap', () => copyProjectMap()],
-    ['codebreeze.startMcpServer', () => startMcpServer(context)],
-    ['codebreeze.stopMcpServer', () => stopMcpServer()],
-    ['codebreeze.startWsBridge', () => startWsBridge(context)],
-    ['codebreeze.stopWsBridge', () => stopWsBridge()],
     ['codebreeze.manualPaste', () => showManualPastePanel(context)],
     ['codebreeze.openChatPanel', () => openChatPanel()],
     ['codebreeze.openControlPanel', () => openControlPanel(context)],

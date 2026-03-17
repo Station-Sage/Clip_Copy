@@ -1,6 +1,15 @@
 # 버그 목록
 
-(현재 발견된 버그 없음 — 초기 개발 단계)
+## B-001: Termux code-server activation 실패
+- **발견**: 2026-03-17
+- **증상**: 사이드바 "There is no data provider registered", 명령 실행 시 "command not found"
+- **원인 1**: `@modelcontextprotocol/sdk` 의존성인 `fast-deep-equal`이 VSIX 번들에 누락 → extension.js 로드 시 크래시 → `activate()` 전체 실패
+- **원인 2**: `src/extension.ts`에서 `mcpServer`/`wsBridgeServer`를 static import하여 모듈 로드 실패가 activation 전체를 중단시킴
+- **수정**:
+  - `src/extension.ts`: `mcpServer`, `wsBridgeServer` static import 제거 → dynamic import로 전환 (명령 실행 시점 로드)
+  - `.vscodeignore`: `fast-deep-equal`, `ajv`, `json-schema-traverse` 화이트리스트 추가
+  - `src/extension.ts`: commands 배열 중복 항목 제거
+- **상태**: 수정 완료 (2026-03-17) — `fix/activation-events` 브랜치
 
 ---
 

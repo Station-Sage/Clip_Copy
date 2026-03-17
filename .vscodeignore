@@ -16,6 +16,9 @@ node_modules/**
 !node_modules/diff/**
 !node_modules/ws/**
 !node_modules/@modelcontextprotocol/**
++!node_modules/fast-deep-equal/**
++!node_modules/ajv/**
++!node_modules/json-schema-traverse/**
 !node_modules/zod/**
 !node_modules/zod-to-json-schema/**
 !node_modules/@hono/**
