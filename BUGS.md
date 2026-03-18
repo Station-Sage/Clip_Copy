@@ -237,6 +237,70 @@
 - **심각도**: Low (git 확장이 보통 빨리 활성화되므로 실제 문제 희소)
 - **상태**: 미수정
 
+## B-030: nativeDiffPreview pending 파일 crash 시 잔존
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/apply/nativeDiffPreview.ts:33-36`
+- **증상**: `showNativeDiff()`에서 `.codebreeze-pending` 임시 파일을 `fs.writeFileSync`로 생성하지만, VS Code가 crash하거나 사용자가 diff 에디터를 닫고 Accept/Reject를 선택하지 않으면 임시 파일이 workspace에 남음.
+- **원인**: `cleanupPendingFile`은 Accept/Reject 선택 후에만 호출됨. crash 시 cleanup 불가. `deactivate()`에서도 `cleanupAllPending()`을 호출하지 않음.
+- **심각도**: Medium (workspace 오염)
+- **상태**: 미수정
+
+## B-031: errorCollector / copyErrorsForAI clipboard 직접 호출
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/collect/errorCollector.ts:13`
+- **증상**: `copyErrorsForAI()`에서 `vscode.env.clipboard.writeText()` 직접 호출. B-003에서 다른 모듈은 `writeClipboard()`로 교체했으나 이 파일은 누락됨.
+- **원인**: B-003 수정 시 errorCollector.ts가 교체 대상에서 빠짐
+- **심각도**: Medium (code-server 환경에서 클립보드 실패 시 fallback 미작동)
+- **상태**: 미수정
+
+## B-032: fileCopy / gitCollector / fixWithAI clipboard 직접 호출
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/collect/fileCopy.ts:29,55,76`, `src/collect/gitCollector.ts:43,65`, `src/commands/fixWithAI.ts:109,122`
+- **증상**: B-031과 동일 — `vscode.env.clipboard.writeText()` 직접 호출. `writeClipboard()`를 사용해야 함.
+- **원인**: B-003 수정 범위 누락
+- **심각도**: Medium
+- **상태**: 미수정
+
+## B-033: localBuildCollector clipboard 직접 호출
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/collect/localBuildCollector.ts:90,111`
+- **증상**: `runCommandAndCopy()`와 `copyLastBuildLog()`에서 `vscode.env.clipboard.writeText()` 직접 호출
+- **원인**: B-003 수정 범위 누락
+- **심각도**: Medium
+- **상태**: 미수정
+
+## B-034: wsBridgeServer codeBlocks handler clipboard 직접 호출
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/bridge/wsBridgeServer.ts:302`
+- **증상**: `handleWsMessage()` 내 codeBlocks case에서 `vscode.env.clipboard.writeText(markdown)` 직접 호출
+- **원인**: B-003 수정 범위 누락
+- **심각도**: Medium
+- **상태**: 미수정
+
+## B-035: mcpServer startMcpServer clipboard 직접 호출
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/mcp/mcpServer.ts:334`
+- **증상**: "Copy URL" 버튼 클릭 시 `vscode.env.clipboard.writeText()` 직접 호출
+- **원인**: B-003 수정 범위 누락
+- **심각도**: Low (URL 복사는 code-server에서 큰 문제 아님)
+- **상태**: 미수정
+
+## B-036: patchApplier execSync 명령어 인자 미이스케이프
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/apply/patchApplier.ts:30-31`
+- **증상**: `execSync(\`git apply --check ${tmpName}\`)` — tmpName이 `Date.now()` 기반이라 현재는 안전하지만, 파일명에 shell 메타문자가 포함되면 command injection 가능.
+- **원인**: shell 메타문자 이스케이프 미적용. `execSync`이 내부적으로 `cp.execSync`에 `{ shell: true }` 없이 실행하나, 실제로는 `exec` 자체가 shell을 사용.
+- **심각도**: Low (현재 Date.now() 기반이라 실질적 위험 없음, 그러나 방어적 코딩 필요)
+- **상태**: 미수정
+
+## B-037: nativeDiffPreview 새 파일 시 원본 경로 미존재 crash
+- **발견**: 2026-03-18 (감사 2차)
+- **파일**: `src/apply/nativeDiffPreview.ts:46-48`
+- **증상**: `isNewFile=true`일 때 `emptyPath = actualOriginalUri.fsPath + '.codebreeze-empty'`로 빈 파일 생성하지만, `actualOriginalUri`의 부모 디렉토리가 존재하지 않으면 `fs.writeFileSync` ENOENT crash.
+- **원인**: 새 파일 경로의 부모 디렉토리 존재 여부 미확인
+- **심각도**: Medium
+- **상태**: 미수정
+
 ## B-012: Browser Bridge 자동 시작 설정 미존재
 - **발견**: 2026-03-18
 - **증상**: VS Code 시작 시 매번 `Ctrl+Shift+P → Start Browser Bridge` 수동 실행 필요

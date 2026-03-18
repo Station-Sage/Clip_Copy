@@ -27,7 +27,27 @@
 | B-028 | Medium | 5 | chatPanel.ts | clipboardWatcher async 중첩 |
 | B-029 | Low | 5 | gitEventMonitor.ts | activate() 미대기 |
 
-**총 16건**: Critical 1, High 6, Medium 6, Low 3
+| B-030 | Medium | 8 | nativeDiffPreview.ts | pending 파일 crash 시 잔존 |
+| B-031 | Medium | 2 | errorCollector.ts | clipboard 직접 호출 (B-003 누락) |
+| B-032 | Medium | 2,8 | fileCopy.ts, gitCollector.ts, fixWithAI.ts | clipboard 직접 호출 (B-003 누락) |
+| B-033 | Medium | 2 | localBuildCollector.ts | clipboard 직접 호출 (B-003 누락) |
+| B-034 | Medium | 4 | wsBridgeServer.ts | clipboard 직접 호출 (B-003 누락) |
+| B-035 | Low | 3 | mcpServer.ts | clipboard 직접 호출 (B-003 누락) |
+| B-036 | Low | 1 | patchApplier.ts | execSync 인자 미이스케이프 |
+| B-037 | Medium | 8 | nativeDiffPreview.ts | 새 파일 시 부모 디렉토리 미생성 |
+
+**총 24건**: Critical 1, High 6, Medium 12, Low 5
+
+### B-003 미완료 요약 (B-031~B-035)
+B-003에서 `vscode.env.clipboard` → `writeClipboard()` 교체가 chatPanel.ts와 clipboardApply.ts에만 적용됨.
+다음 파일들이 여전히 직접 호출:
+- `src/collect/errorCollector.ts:13`
+- `src/collect/fileCopy.ts:29,55,76`
+- `src/collect/gitCollector.ts:43,65`
+- `src/collect/localBuildCollector.ts:90,111`
+- `src/commands/fixWithAI.ts:109,122`
+- `src/bridge/wsBridgeServer.ts:302`
+- `src/mcp/mcpServer.ts:334`
 
 ---
 
@@ -52,8 +72,11 @@ B-014, B-017, B-018, B-019
 ### 2차 (High 안정성)
 B-015, B-016, B-019, B-020
 
-### 3차 (Medium)
-B-021 ~ B-028
+### 3차 (Medium — clipboard 직접 호출 일괄 수정)
+B-031, B-032, B-033, B-034 — `vscode.env.clipboard.writeText` → `writeClipboard()` 일괄 교체
 
-### 4차 (Low — 선택적)
-B-024, B-026, B-029
+### 4차 (Medium — 기타)
+B-021, B-022, B-023, B-025, B-027, B-028, B-030, B-037
+
+### 5차 (Low — 선택적)
+B-024, B-026, B-029, B-035, B-036
