@@ -9,6 +9,11 @@
   .dot.disconnected { background: #f44336; }
   input { width: 100%; padding: 6px; box-sizing: border-box; }
   button { width: 100%; padding: 8px; margin-top: 8px; cursor: pointer; }
+  .test-result { margin-top: 8px; padding: 8px; background: #f5f5f5; border-radius: 4px; font-size: 11px; display: none; }
+  .test-result.show { display: block; }
+  .test-ok { color: #4caf50; }
+  .test-fail { color: #f44336; }
+  hr { margin: 12px 0; border: none; border-top: 1px solid #ddd; }
 </style></head>
 <body>
   <div class="status">
@@ -20,6 +25,9 @@
   </label>
   <button id="connectBtn">Connect</button>
   <button id="disconnectBtn">Disconnect</button>
+  <hr>
+  <button id="testSelectorsBtn">Test Selectors</button>
+  <div class="test-result" id="testResult"></div>
   <script src="popup.js"></script>
 </body>
 </html>

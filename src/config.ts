@@ -21,6 +21,9 @@ export interface CodeBreezeConfig {
   agentLoopTimeout: number;
   streamingDebounceMs: number;
   errorChainDepth: number;
+  diffPreviewMode: 'native' | 'inline';
+  rulesFile: string;
+  agentLoopAutoApply: 'preview' | 'auto' | 'safe';
 }
 
 const LOCAL_CONFIG_FILE = '.codebreeze.json';
@@ -46,6 +49,9 @@ export function getConfig(): CodeBreezeConfig {
     agentLoopTimeout: vsConfig.get('agentLoopTimeout', 300),
     streamingDebounceMs: vsConfig.get('streamingDebounceMs', 1500),
     errorChainDepth: vsConfig.get('errorChainDepth', 2),
+    diffPreviewMode: vsConfig.get('diffPreviewMode', 'native'),
+    rulesFile: vsConfig.get('rulesFile', '.codebreeze-rules.md'),
+    agentLoopAutoApply: vsConfig.get('agentLoopAutoApply', 'preview'),
   };
 
   const workspaceRoot = getWorkspaceRoot();

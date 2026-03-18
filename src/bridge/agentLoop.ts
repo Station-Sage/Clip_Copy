@@ -1,5 +1,12 @@
-// src/bridge/agentLoop.ts
-
+/**
+ * Agent Loop — Phase 5 + Phase 9 (multi-phase, auto-apply, progress UI)
+ *
+ * Automated build → error → AI fix cycle with:
+ * - Phase-aware loop (Analyze → Request → Waiting → Apply → Verify)
+ * - 3 auto-apply modes: preview / auto / safe
+ * - Iteration history to prevent repeated mistakes
+ * - Real-time progress UI updates
+ */
 import * as vscode from 'vscode';
 import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
 import { applyInlineDiffHeadless } from '../apply/inlineDiffApply';
@@ -8,25 +15,37 @@ import { getErrorChainFiles } from '../collect/errorChainCollector';
 import { getConfig, getWorkspaceRoot } from '../config';
 import { countDiagnostics } from '../monitor/diagnosticsMonitor';
 import { CodeBlock } from '../types';
-import { DEFAULT_AGENT_LOOP_MAX_ITERATIONS } from './bridgeProtocol';
-import { formatCodeBlock } from '../utils/markdown';
-import * as fs from 'fs';
-import * as path from 'path';
+import { AgentLoopPhase, DEFAULT_AGENT_LOOP_MAX_ITERATIONS } from './bridgeProtocol';
+import {
+  buildErrorFixPrompt,
+  buildIterationPrompt,
+  buildErrorChainMarkdown,
+  summarizeErrors,
+  IterationRecord,
+} from './promptBuilder';
 
 interface AgentLoopState {
   active: boolean;
   iteration: number;
+  maxIterations: number;
+  phase: AgentLoopPhase;
   webview: vscode.Webview | null;
   resolveResponse: ((blocks: CodeBlock[]) => void) | null;
   abortRequested: boolean;
+  startTime: number;
+  history: IterationRecord[];
 }
 
 const state: AgentLoopState = {
   active: false,
   iteration: 0,
+  maxIterations: 0,
+  phase: 'complete',
   webview: null,
   resolveResponse: null,
   abortRequested: false,
+  startTime: 0,
+  history: [],
 };
 
 export function isAgentLoopActive(): boolean {
@@ -54,8 +73,27 @@ function waitForAIResponse(timeoutMs: number): Promise<CodeBlock[]> {
   });
 }
 
+// ── Progress notification helpers ────────────────────────────────────────
+
+function setPhase(phase: AgentLoopPhase): void {
+  state.phase = phase;
+  notifyProgress();
+}
+
 function notify(text: string): void {
   state.webview?.postMessage({ command: 'agentLoopUpdate', text });
+}
+
+function notifyProgress(): void {
+  const elapsed = Math.round((Date.now() - state.startTime) / 1000);
+  state.webview?.postMessage({
+    command: 'agentLoopProgress',
+    iteration: state.iteration,
+    maxIterations: state.maxIterations,
+    phase: state.phase,
+    elapsedSeconds: elapsed,
+    historyCount: state.history.length,
+  });
 }
 
 function collectErrorFingerprint(): string {
@@ -72,9 +110,6 @@ function collectErrorFingerprint(): string {
   return items.join('|');
 }
 
-/**
- * Collect error file paths from VS Code diagnostics.
- */
 function getErrorFilePaths(): string[] {
   const allDiags = vscode.languages.getDiagnostics();
   const files = new Set<string>();
@@ -86,34 +121,20 @@ function getErrorFilePaths(): string[] {
   return [...files];
 }
 
-/**
- * Build error chain context markdown.
- */
-function buildErrorChainContext(workspaceRoot: string, depth: number): string {
-  const errorFiles = getErrorFilePaths();
-  if (errorFiles.length === 0) return '';
-
-  const chains = getErrorChainFiles(errorFiles, workspaceRoot, depth);
-  const parts: string[] = ['### Related Files (import chain)'];
-
-  for (const chain of chains) {
-    for (const chainFile of chain.chainFiles.slice(0, 5)) {
-      try {
-        const content = fs.readFileSync(chainFile, 'utf8');
-        const relPath = path.relative(workspaceRoot, chainFile);
-        const ext = path.extname(chainFile).slice(1);
-        // Truncate to 50 lines for context
-        const lines = content.split('\n');
-        const truncated = lines.length > 50 ? lines.slice(0, 50).join('\n') + '\n// ...' : content;
-        parts.push(formatCodeBlock(truncated, ext, relPath));
-      } catch {
-        // skip unreadable files
+function getErrorDiagnosticItems(): Array<{ file: string; message: string }> {
+  const allDiags = vscode.languages.getDiagnostics();
+  const items: Array<{ file: string; message: string }> = [];
+  for (const [uri, diagnostics] of allDiags) {
+    for (const d of diagnostics) {
+      if (d.severity === vscode.DiagnosticSeverity.Error) {
+        items.push({ file: uri.fsPath, message: d.message });
       }
     }
   }
-
-  return parts.length > 1 ? parts.join('\n\n') : '';
+  return items;
 }
+
+// ── Main Agent Loop ──────────────────────────────────────────────────────
 
 export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
   if (state.active) {
@@ -131,6 +152,8 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
   state.iteration = 0;
   state.webview = webview;
   state.abortRequested = false;
+  state.startTime = Date.now();
+  state.history = [];
 
   const vsCfg = vscode.workspace.getConfiguration('codebreeze');
   const maxIterations = vsCfg.get<number>('agentLoopMaxIterations') ?? DEFAULT_AGENT_LOOP_MAX_ITERATIONS;
@@ -139,8 +162,10 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
   const errorChainDepth = vsCfg.get<number>('errorChainDepth') ?? 2;
   const config = getConfig();
   const workspaceRoot = getWorkspaceRoot() || '';
+  const autoApplyMode = config.agentLoopAutoApply;
 
-  notify(`Agent loop started (max ${maxIterations} iterations, timeout ${timeoutSec}s)`);
+  state.maxIterations = maxIterations;
+  notify(`Agent loop started (max ${maxIterations} iterations, timeout ${timeoutSec}s, apply: ${autoApplyMode})`);
 
   let lastFingerprint = '';
   let repeatedCount = 0;
@@ -155,29 +180,31 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
       state.iteration = i + 1;
       notify(`--- Iteration ${state.iteration}/${maxIterations} ---`);
 
-      // Step 1: Build
-      notify('Running build...');
+      // ── Phase 1: Analyze ──
+      setPhase('analyze');
+      notify('Analyzing: Running build...');
       const { runCommandAndCopy } = await import('../collect/localBuildCollector');
       const buildCmd = config.buildCommands[0] || 'npm run build';
       const buildResult = await runCommandAndCopy(buildCmd);
 
-      // Step 2: Check errors
       const { errors } = countDiagnostics();
       const buildFailed = buildResult && buildResult.exitCode !== 0;
 
       if (errors === 0 && !buildFailed) {
-        // Step 2b: Run test command if configured
+        // Run tests if configured
         const testCmd = config.testCommands[0];
         if (testCmd) {
           notify('Build OK. Running tests...');
           const testResult = await runCommandAndCopy(testCmd);
           const { errors: testErrors } = countDiagnostics();
           if (testErrors === 0 && testResult && testResult.exitCode === 0) {
+            setPhase('complete');
             notify('Build and tests passed! Agent loop complete.');
             break;
           }
           notify(`Tests failed (exit ${testResult?.exitCode}). Collecting context...`);
         } else {
+          setPhase('complete');
           notify('Build succeeded with no errors! Agent loop complete.');
           break;
         }
@@ -185,7 +212,7 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
         notify(`${errors} error(s) detected. Collecting context...`);
       }
 
-      // Step 3: Check for repeated errors (early termination)
+      // Check for repeated errors (early termination)
       const currentFingerprint = collectErrorFingerprint();
       if (currentFingerprint === lastFingerprint && currentFingerprint !== '') {
         repeatedCount++;
@@ -199,21 +226,26 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
       }
       lastFingerprint = currentFingerprint;
 
-      // Step 4: Collect error context + import chain
+      // ── Phase 2: Request ──
+      setPhase('request');
       const contextPayload = await buildContextPayload(['errors', 'file', 'buildLog']);
-      const chainContext = buildErrorChainContext(workspaceRoot, errorChainDepth);
-      const prompt = [
-        `The build/test failed with ${errors} error(s). Please fix the following issues:`,
-        '',
-        contextPayload,
-        chainContext,
-      ].filter(Boolean).join('\n\n');
+      const errorFiles = getErrorFilePaths();
+      const chainContext = buildErrorChainMarkdown(
+        errorFiles, workspaceRoot, errorChainDepth, getErrorChainFiles
+      );
 
-      // Step 5: Send to AI
+      let prompt: string;
+      if (state.history.length === 0) {
+        prompt = buildErrorFixPrompt(errors, contextPayload, chainContext);
+      } else {
+        prompt = buildIterationPrompt(errors, contextPayload, chainContext, state.history);
+      }
+
+      // ── Phase 3: Waiting ──
+      setPhase('waiting');
       notify('Sending error context to AI...');
-      broadcastToBrowser({ type: 'send_to_ai', payload: prompt, autoSend: true });
+      broadcastToBrowser({ type: 'send_to_ai', payload: prompt, autoSend: true }, true);
 
-      // Step 6: Wait for AI response
       notify('Waiting for AI response...');
       let responseBlocks: CodeBlock[];
       try {
@@ -228,16 +260,72 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
         break;
       }
 
-      // Step 7: Apply code blocks
-      notify(`Applying ${responseBlocks.length} code block(s) (mode: ${applyMode})...`);
-      const results = applyMode === 'inline'
-        ? await applyInlineDiffHeadless(responseBlocks)
-        : await applyCodeBlocksHeadless(responseBlocks);
+      // ── Phase 4: Apply ──
+      setPhase('apply');
+      notify(`Received ${responseBlocks.length} code block(s). Applying (mode: ${autoApplyMode})...`);
+
+      let results;
+      if (autoApplyMode === 'preview') {
+        // Show native diff preview for each block
+        const { showNativeDiff } = await import('../apply/nativeDiffPreview');
+        const accepted: CodeBlock[] = [];
+        for (const block of responseBlocks) {
+          if (block.filePath) {
+            const wasAccepted = await showNativeDiff(block);
+            if (wasAccepted) accepted.push(block);
+          } else {
+            accepted.push(block);
+          }
+        }
+        results = applyMode === 'inline'
+          ? await applyInlineDiffHeadless(accepted)
+          : await applyCodeBlocksHeadless(accepted);
+      } else {
+        // auto or safe: apply directly
+        results = applyMode === 'inline'
+          ? await applyInlineDiffHeadless(responseBlocks)
+          : await applyCodeBlocksHeadless(responseBlocks);
+      }
+
       const applied = results.filter((r) => r.status === 'applied' || r.status === 'created').length;
+      const appliedFiles = results
+        .filter((r) => r.status === 'applied' || r.status === 'created')
+        .map((r) => r.filePath);
       notify(`Applied ${applied}/${responseBlocks.length} block(s)`);
 
+      // ── Phase 5: Verify ──
+      setPhase('verify');
       // Wait for diagnostics update
       await new Promise((r) => setTimeout(r, 2000));
+
+      // Record iteration history
+      const { errors: postErrors } = countDiagnostics();
+      const errorItems = getErrorDiagnosticItems();
+      state.history.push({
+        iteration: state.iteration,
+        errorSummary: summarizeErrors(errorItems),
+        appliedFiles,
+        buildExitCode: buildResult?.exitCode ?? -1,
+        errorCount: postErrors,
+      });
+
+      // Safe mode: verify build+test, undo if failed
+      if (autoApplyMode === 'safe' && applied > 0) {
+        notify('Safe mode: Verifying build+test after apply...');
+        const verifyResult = await runCommandAndCopy(buildCmd);
+        const { errors: verifyErrors } = countDiagnostics();
+
+        if (verifyErrors > errors || (verifyResult && verifyResult.exitCode !== 0 && !buildFailed)) {
+          notify('Safe mode: Changes made things worse. Undoing...');
+          try {
+            const { undoLastApply } = await import('../apply/safetyGuard');
+            await undoLastApply();
+            notify('Changes reverted. Trying different approach in next iteration.');
+          } catch (undoErr) {
+            notify(`Undo failed: ${undoErr instanceof Error ? undoErr.message : String(undoErr)}`);
+          }
+        }
+      }
     }
   } catch (err) {
     notify(`Agent loop error: ${err instanceof Error ? err.message : String(err)}`);
@@ -245,6 +333,7 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
     state.active = false;
     state.resolveResponse = null;
     state.abortRequested = false;
+    setPhase('complete');
     notify('Agent loop finished');
   }
 }

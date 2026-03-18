@@ -2,6 +2,28 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+### 2026-03-18 — Phase 7-9 구현 (브릿지 실전화 + 네이티브 통합 + Agent Loop 고도화)
+
+#### Phase 7: 브라우저 브릿지 실전화
+- **셀렉터 폴백 체인** (Task 7-2): content.js SITE_CONFIG에 배열 기반 다단계 셀렉터. 1차 셀렉터 실패 시 범용 셀렉터(`pre > code, [class*="code-block"]`)로 폴백. 셀렉터 `version` 필드 + popup.html "Test Selectors" 버튼. 코드 블록 중복 감지(Set 기반 dedup)
+- **브릿지 신뢰성** (Task 7-3): OutputChannel 로그(`CodeBreeze Bridge`), ACK 프로토콜(msgId 기반), 재전송 큐(최대 3회, 5초 타임아웃), `getBridgeConnectionState()`, 상태바 클라이언트 수 표시. background.js ACK 지원
+- **클립보드 파싱 강화** (Task 7-4): 불완전 코드 블록 감지(닫는 ``` 없음 → 경고 + 최선 추측), 대용량 청크 파싱(100KB+ → 코드 블록 경계 기반 분할)
+
+#### Phase 8: VS Code 네이티브 통합 + 프로젝트 규칙
+- **VS Code diff editor** (Task 8-1): `nativeDiffPreview.ts` 신규, `vscode.diff` 명령 활용, Accept/Reject 프롬프트, 멀티 파일 일괄 diff, `diffPreviewMode` 설정 ('native'/'inline')
+- **프로젝트 규칙 시스템** (Task 8-2): `rulesLoader.ts` 신규, `.codebreeze-rules.md` 로드/캐시, Smart Context와 Agent Loop에 자동 prepend, `rulesFile` 설정
+- **원클릭 에러 수정** (Task 8-3): `fixWithAI.ts` 신규, 에러+코드+규칙 조합 프롬프트, 브릿지 연결 시 자동 전송, 미연결 시 클립보드, 단축키 Ctrl+Shift+F, 에디터 컨텍스트 메뉴
+
+#### Phase 9: Agent Loop 고도화
+- **다단계 전략** (Task 9-1): `promptBuilder.ts` 신규 (~100줄), Phase-aware 루프 (Analyze→Request→Waiting→Apply→Verify), 이전 시도 히스토리 누적(같은 실수 반복 방지), 구조화된 프롬프트 템플릿
+- **자동 적용 모드** (Task 9-2): `agentLoopAutoApply` 설정 ('preview'/'auto'/'safe'). preview=diff editor 표시, auto=직접 적용, safe=테스트 통과 시만 적용+실패 시 자동 undo
+- **진행 상황 UI** (Task 9-3): `agentLoopProgress` 메시지로 실시간 프로그레스 바 (단계, iteration, 시간 경과)
+
+#### 테스트 & 설정
+- 새 설정 3개: `diffPreviewMode`, `rulesFile`, `agentLoopAutoApply`
+- 신규 테스트 23개: promptBuilder (7), rulesLoader (4), markdownParser Phase7 (9), bridgeProtocol Phase7 (3)
+- 설계 결정 4개: D15 (프로젝트 규칙), D16 (커넥터 인터페이스), D17 (diff preview 이원화), D18 (인라인 완성 의도적 트리거)
+
 ### 2026-03-17 — Cursor-like 자동화 개선 (Phase 6)
 - **에러 체인 추적**: `errorChainCollector.ts` 신규 — import/require 체인 추적 (ES, CommonJS, Python, C/C++, Go, Rust), 순환 참조 방지, 설정 가능한 깊이 (`errorChainDepth`)
 - **청크 분할**: `chunkSplitter.ts` 신규 — 함수/클래스/인터페이스 경계 감지 (7개 언어), `fileCopy.ts`에 `buildChunkedFileMarkdown()` 추가
@@ -9,64 +31,11 @@
 - **Agent Loop 개선**: 테스트 명령 자동 실행, 동일 에러 2회 반복 시 조기 종료, 설정 가능한 타임아웃, 에러 체인 컨텍스트 전송, Stop 버튼 UI 연동
 - **chatPanelHtml.ts 분할**: 644줄 → `chatPanelStyles.ts` (~170줄) + `chatPanelScript.ts` (~280줄) + `chatPanelHtml.ts` (~130줄)
 - **새 설정 4개**: `applyMode`, `agentLoopTimeout`, `streamingDebounceMs`, `errorChainDepth`
-- **크로스 플랫폼**: `localBuildCollector.ts` `path.join()` 사용 (Windows 경로 호환)
-- **타입**: `Chunk` 인터페이스 추가 (`types.ts`)
-- **테스트**: 37개 신규 (errorChainCollector 14, chunkSplitter 13, inlineDiffApply 8, 기존 2 추가) — 전체 102개 통과
-- **설계 결정**: D13 (applyMode inline 기본), D14 (errorChainDepth 설정)
+- **테스트**: 37개 신규 — 전체 102개 통과
 
 ### 2026-03-17 — 컨트롤 패널 수정, 빌드 파서 개선, 아이콘 및 CRX 아티팩트
-- **컨트롤 패널 수정**: `secondarySidebar` (proposed API) → `panel` (하단 패널) 이동. "Drag a view here" 이슈 해결
-- **컴파일 에러 수정**: chatPanel.ts 중복 `sendBridgeStatus`, wsBridgeServer.ts 중복 `getConnectionCount` 제거
-- **localBuildCollector 개선**: GCC/Clang, Java/Kotlin, Python traceback, Gradle/Maven, Swift 에러 포맷 파서 추가 + 중복 제거
-- **Agent Loop 설정화**: `codebreeze.agentLoopMaxIterations` 설정 추가 (1-20, 기본 5). `MAX_AGENT_LOOP_ITERATIONS` → `DEFAULT_AGENT_LOOP_MAX_ITERATIONS` 이름 변경
-- **I-004 구현**: `resources/icon.png` (128x128) 생성, package.json `"icon"` 필드 추가
-- **browser-extension/icons/**: icon16/48/128.png 생성
-- **CRX 빌드**: `scripts/build-browser-ext.js` 추가, `npm run build:browser-ext`로 `dist/codebreeze-bridge.crx` + `.zip` 생성
-- **린트 정리**: agentLoop.ts 미사용 `parseClipboard` import 제거
-
-### 2026-03-17 — Phase 4 브라우저 확장 구현
-- **브라우저 확장** (browser-extension/): Chrome Manifest V3, 5개 AI챗 사이트 지원
-  - content.js (~180줄): MutationObserver 기반 코드 블록 감지, AI챗 입력창 자동화
-  - background.js (~120줄): WebSocket 연결, 지수 백오프 재연결 (최대 10회), 메시지 라우팅
-  - popup.html/js (~100줄): 연결 상태 표시 + 포트 설정
-- **bridgeProtocol.ts** (신규 ~60줄): 메시지 타입 정의 (BrowserToVSCode, VSCodeToBrowser, BridgeCodeBlock)
-- **agentLoop.ts** (신규 ~150줄): 자동 에이전트 루프 — 코드 적용 → 빌드 → 에러 수집 → AI 재전송 (최대 5회)
-- **wsBridgeServer.ts** 확장: `ai_response`, `send_to_ai` 핸들러 추가, `getConnectionCount()` export
-- **chatPanelHtml.ts**: Bridge 탭 추가 (대화 히스토리, 입력창, Agent Loop 버튼)
-- **chatPanel.ts**: Bridge 관련 메시지 핸들러 추가 (startBridge, stopBridge, bridgeSendToAI, bridgeSendContext, startAgentLoop)
-- 설계 결정: D9 (Site-specific selectors), D10 (에이전트 루프 5회 제한), D11 (스트리밍 디바운스 1.5초)s
-
-### 2026-03-17 — Phase 1 안정화 (에러 경로 + clipboardCompat 연동)
-- **B-002 수정**: safetyGuard stash ref → `stash@{0}` 직접 사용 (git stash list 파싱 제거)
-- **B-003 수정**: clipboardCompat.ts를 chatPanel.ts, clipboardApply.ts에 연동 (20+ 직접 호출 중 핵심 경로 교체)
-- **B-004 수정**: autoWatch setInterval 내 try/catch 추가 (silent failure 방지)
-- **B-005 수정**: chatPanel message handler 에러 처리 추가 (applyBlock, sendContext, previewBlock)
-- **B-006 수정**: fileMatcher `resolveOrCreateFile` 부모 디렉토리 자동 생성
-- **B-007 수정**: clipboardApply `applyFromClipboard` 전체 try/catch 래핑 + skip 사유 로깅
-- **B-008 수정**: patchApplier temp 파일 `Date.now()` 기반 유니크 이름
-- clipboardCompat에 2초 타임아웃 추가 (code-server 행 방지)
-- findFiles exclude에 dist/out/.git 추가
-
-### 2026-03-16 — MCP 서버, WebSocket 브릿지, 오픈소스 라이브러리 교체
-- **Phase 3 MCP 서버** (src/mcp/mcpServer.ts): `@modelcontextprotocol/sdk` 공식 라이브러리 사용, 9개 도구 (read_file, write_file, list_files, get_errors, get_git_diff, run_build, apply_code, get_project_map, apply_code_headless), 포트 3700
-- **Phase 4 WebSocket 브릿지** (src/bridge/wsBridgeServer.ts): `ws` 라이브러리로 교체 (커스텀 RFC 6455 프레임 파서 제거), `noServer` 모드 + `handleUpgrade` 패턴, 포트 3701
-- **I-001 code-server 클립보드 폴백** (src/utils/clipboardCompat.ts): VS Code clipboard API 실패 시 `.codebreeze-clipboard.md` 파일 기반 폴백, `showManualPastePanel` WebView textarea
-- **I-002 프로젝트 맵** (src/collect/projectMapCollector.ts): 8개 언어(TS/JS/Py/Kotlin/Java/Go/Rust/TSX) 정규식 기반 심볼 추출, 200파일 한도, `codebreeze.copyProjectMap` 커맨드
-- **I-003 diff 미리보기** (src/apply/diffPreview.ts): `diff` npm 패키지 `diffLines` 사용, ±3줄 컨텍스트 축소, 코드 블록별 인라인 diff 표시
-- **fix/bug-batch-01 squash 머지**: 컨트롤 패널 열기 오류 수정 (simpleBrowser → openExternal)
-- **패키징 수정**: .vscodeignore에 ws, @modelcontextprotocol, zod 등 런타임 패키지 화이트리스트 추가
-- **테스트**: 56개 통과 (projectMapCollector 7개, diffPreview 10개, mcpServer 10개 신규)
-- **가이드**: docs/code-server-guide.md 작성 (web, code-server, Termux+code-server 실행 방법)
-
-### 2026-03-15 — Collect 흐름 완성 + GitHub API 개선
-- lint warning 8개 → 0 (fs/CodeBlock/url/config/prevCommit/workspaceRoot/warnings/copyMultipleFilesForAI 미사용 제거)
-- gitEventMonitor: `prevCommit` 활용하여 HEAD hash 변경 시에만 'commit' 이벤트 발행
-- githubLogCollector: `githubToken` 선택사항으로 변경 — public 레포는 토큰 없이 조회 가능
-- `copyMultipleFilesForAI` 커맨드 등록 + explorer/context 다중 선택 메뉴 추가
-- 신규 테스트: `test/suite/collectUtils.test.ts` 10개
-
-### 2026-03-15 — 단위테스트 + CI 강화
-- 테스트 4파일 추가: markdownUtils, diffDetectorExtended, markdownParserExtended, types
-- 기존 11개 + 신규 34개 = 총 45개 테스트, 전부 통과
-- CI에 `xvfb-run -a npm test` 단계 추가
-- VSIX 패키징 수정: package.json main 경로 out/src/extension.js
+- **컨트롤 패널 수정**: `secondarySidebar` → `panel` (하단 패널) 이동
+- **localBuildCollector 개선**: GCC/Clang, Java/Kotlin, Python traceback, Gradle/Maven, Swift 에러 포맷 파서 추가
+- **Agent Loop 설정화**: `codebreeze.agentLoopMaxIterations` 설정 추가 (1-20, 기본 5)
+- **I-004 구현**: `resources/icon.png` (128x128) 생성
+- **CRX 빌드**: `scripts/build-browser-ext.js` 추가

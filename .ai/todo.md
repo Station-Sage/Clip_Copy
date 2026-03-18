@@ -1,35 +1,62 @@
-# 할일 (2026-03-17)
+# 할일 (2026-03-18)
 
-## 완료 — Phase 6: Cursor-like 자동화 개선
-- [x] errorChainCollector.ts 신규 생성 — import/require 체인 추적 (~120줄)
-- [x] chunkSplitter.ts 신규 생성 — 함수/클래스 경계 분할 (~100줄)
-- [x] diffRangeCalculator.ts 신규 생성 — 순수 diff 범위 계산 (~50줄)
-- [x] inlineDiffApply.ts 신규 생성 — 부분 편집 적용 (~80줄)
-- [x] agentLoop.ts 개선 — 테스트 명령, 조기 종료, 타임아웃, 에러 체인 컨텍스트
-- [x] chatPanelHtml.ts 분할 → chatPanelStyles.ts + chatPanelScript.ts (644→130줄)
-- [x] clipboardApply.ts 업데이트 — inline diff 모드 연동
-- [x] fileCopy.ts 업데이트 — chunkSplitter 연동 (buildChunkedFileMarkdown)
-- [x] config.ts + package.json — 4개 설정 추가 (applyMode, agentLoopTimeout, streamingDebounceMs, errorChainDepth)
-- [x] types.ts — Chunk 인터페이스 추가
-- [x] localBuildCollector.ts — path.join 사용 (Windows 경로 호환)
-- [x] chatPanel.ts — stopAgentLoop 핸들러 추가
-- [x] 테스트: errorChainCollector (14개), chunkSplitter (13개), inlineDiffApply (8개) = 35개 신규
-- [x] npm run compile — 에러 없음
-- [x] npm run lint — 신규 warning 0 (기존 5개만)
-- [x] 기존 65개 + 신규 37개 = 전체 102개 테스트 통과
-- [x] MD 파일 업데이트 (roadmap, todo, changelog, decisions, browser-extension README)
+## 완료 — Phase 7: 실 환경 검증 + 브라우저 브릿지 실전화
+- [x] Task 7-2: Genspark 셀렉터 검증 및 강화
+  - content.js SITE_CONFIG 셀렉터 폴백 체인 구현 (배열 기반 다단계)
+  - queryWithFallback / queryOneWithFallback 헬퍼 함수
+  - 범용 폴백 셀렉터 (`pre > code, [class*="code-block"]`)
+  - 셀렉터 version 필드 추가 (2026-03-18)
+  - popup.html "Test Selectors" 버튼 + content.js testSelectors 핸들러
+  - 코드 블록 중복 감지 (Set 기반 dedup)
+- [x] Task 7-3: 브릿지 신뢰성 개선
+  - OutputChannel 기반 브릿지 통신 로그 ('CodeBreeze Bridge' 채널)
+  - ACK 프로토콜: msgId 기반 메시지 확인
+  - 메시지 재전송 큐: ACK 미수신 시 최대 3회 재전송 (5초 타임아웃)
+  - 연결 상태 모니터링: getBridgeConnectionState() 함수
+  - 상태바 클라이언트 수 표시
+  - background.js ACK 지원 + 메시지 ID 자동 부여
+- [x] Task 7-4: 클립보드 파싱 강화
+  - 불완전 코드 블록 감지 (닫는 ``` 없는 경우 경고 + 최선 추측 적용)
+  - 대용량 클립보드 처리 (100KB+ 청크 파싱)
+  - 코드 블록 경계 기반 청크 분할
 
-## 완료 — Phase 4 브라우저 확장
-- [x] Task 1~7: bridgeProtocol, browser-extension, content.js, background.js, Bridge 탭, agentLoop, 테스트
+## 완료 — Phase 8: VS Code 네이티브 통합 + 프로젝트 규칙
+- [x] Task 8-1: VS Code diff editor 통합
+  - nativeDiffPreview.ts 신규 (~100줄)
+  - vscode.diff 명령으로 적용 전/후 비교 UI
+  - Accept/Reject 프롬프트
+  - 멀티 파일 일괄 diff: QuickPick 선택 → 개별 diff 탭
+  - diffPreviewMode 설정: 'native' (기본) / 'inline'
+- [x] Task 8-2: 프로젝트 규칙 시스템
+  - rulesLoader.ts 신규 (~60줄): .codebreeze-rules.md 로드, 캐시, 포맷
+  - smartContext.ts: buildSmartContext + buildContextPayload에 규칙 자동 prepend
+  - rulesFile 설정: 규칙 파일 경로 커스텀
+- [x] Task 8-3: 원클릭 에러 수정 워크플로우
+  - fixWithAI.ts 신규 (~100줄): 에러 컨텍스트 → AI 전송/클립보드
+  - extension.ts 명령 등록 (codebreeze.fixErrorWithAI)
+  - 단축키 Ctrl+Shift+F, 에디터 컨텍스트 메뉴 추가
+  - 브릿지 연결/미연결 분기 처리
 
-## 완료 — 안정화 + 개선
-- [x] 컨트롤 패널 secondarySidebar → panel 이동
-- [x] 중복 함수 제거 (sendBridgeStatus, getConnectionCount)
-- [x] errorParser 추출 + 8개 빌드 도구 에러 포맷 지원
-- [x] Agent Loop 반복 횟수 설정화
-- [x] Marketplace 아이콘, 브라우저 확장 아이콘, CRX 빌드 스크립트
+## 완료 — Phase 9: Agent Loop 고도화
+- [x] Task 9-1: Agent Loop 다단계 전략
+  - promptBuilder.ts 신규 (~100줄): buildErrorFixPrompt, buildIterationPrompt, buildErrorChainMarkdown, summarizeErrors
+  - agentLoop.ts 리팩터: Phase-aware 루프 (Analyze → Request → Waiting → Apply → Verify)
+  - 이전 시도 히스토리 (IterationRecord) 누적 전송
+- [x] Task 9-2: Agent Loop 자동 적용 모드
+  - agentLoopAutoApply 설정: 'preview' (기본) / 'auto' / 'safe'
+  - preview: nativeDiffPreview로 사용자 확인
+  - safe: 적용 → 빌드+테스트 → 실패 시 자동 undo
+- [x] Task 9-3: Agent Loop 진행 상황 UI
+  - agentLoopProgress 메시지: iteration, maxIterations, phase, elapsedSeconds
+  - chatPanelScript.ts: 프로그레스 바 UI (단계, 시간, 진행률)
 
-## 남은 검증 작업
+## 신규 테스트 (Phase 7-9)
+- [x] promptBuilder.test.ts — 7개 (buildErrorFixPrompt, buildIterationPrompt, summarizeErrors)
+- [x] rulesLoader.test.ts — 4개 (loadProjectRules, formatProjectRulesSection, hasProjectRules, clearRulesCache)
+- [x] markdownParserPhase7.test.ts — 9개 (incomplete blocks, chunked parsing, edge cases)
+- [x] bridgeProtocolPhase7.test.ts — 3개 (AgentLoopPhase, AgentLoopAutoApplyMode, defaults)
+
+## 남은 검증 작업 (Task 7-1, 사용자 별도 진행)
 - [ ] Collect 흐름 테스트: Ctrl+Shift+C → 클립보드에 마크다운 포맷 확인
 - [ ] 컨트롤 패널(Ctrl+Shift+I) WebView 로드 확인
 - [ ] Bridge 탭 UI 렌더링 확인 + Agent Loop 시작/중지 테스트
@@ -38,32 +65,8 @@
 - [ ] Windows 10 VS Code 환경 테스트 (경로 호환 확인)
 - [ ] Termux 태블릿 code-server 테스트
 
-## 미구현 개선사항 (향후)
-- [ ] VS Code diff editor 통합 (vscode.diff 명령)
-- [ ] MCP transport per-request 패턴
-- [ ] MCP 클라이언트 내장 (mcpClient.ts)
-- [ ] Firefox 확장 호환 (manifest V2)
-- [ ] 스트리밍 모드: AI 응답 토큰 단위 표시
-- [ ] 멀티 파일 일괄 diff 미리보기
-
-## 완료 — Phase 4 브라우저 확장
-- [x] Task 1: bridgeProtocol.ts 신규 생성 + wsBridgeServer.ts 프로토콜 확장
-- [x] Task 2: browser-extension/ 스캐폴딩 (manifest.json, popup.html/js)
-- [x] Task 3: content.js — 5개 AI챗 사이트 코드 블록 감지
-- [x] Task 4: background.js — WebSocket 연결 + 지수 백오프 재연결
-- [x] Task 5: chatPanelHtml.ts Bridge 탭 UI + chatPanel.ts 핸들러
-- [x] Task 6: agentLoop.ts — 빌드→에러→AI재전송 자동 루프 (설정화 완료)
-- [x] Task 7: 테스트 + getConnectionCount 추가
-
-## 완료 — 안정화 + 개선
-- [x] npm run compile 에러 없음 확인 — 2026-03-17
-- [x] npm run lint 통과 (0 errors, warnings only) — 2026-03-17
-- [x] 컨트롤 패널 secondarySidebar → panel 이동 (WebView 로드 이슈 해결) — 2026-03-17
-- [x] chatPanel.ts 중복 sendBridgeStatus 함수 제거 — 2026-03-17
-- [x] wsBridgeServer.ts 중복 getConnectionCount 함수 제거 — 2026-03-17
-- [x] localBuildCollector: 다양한 빌드 도구 에러 포맷 파싱 (GCC/Clang, Java/Kotlin, Python, Gradle/Maven, Swift) — 2026-03-17
-- [x] Agent Loop 반복 횟수 설정화 (codebreeze.agentLoopMaxIterations, 기본 5, 최대 20) — 2026-03-17
-- [x] I-004: Marketplace용 아이콘 PNG 등록 (resources/icon.png + package.json icon 필드) — 2026-03-17
-- [x] browser-extension/icons/ 아이콘 생성 (16/48/128px PNG) — 2026-03-17
-- [x] 브라우저 확장 CRX/ZIP 빌드 스크립트 (scripts/build-browser-ext.js) — 2026-03-17
-- [x] agentLoop.ts 미사용 parseClipboard import 제거 — 2026-03-17
+## 미구현 (중기 로드맵, Phase 10+)
+- [ ] LSP 기반 코드베이스 인덱싱 (Phase 10)
+- [ ] 백그라운드 Agent + 인라인 코드 완성 (Phase 11)
+- [ ] CLI + CI/CD + MCP 도구 확장 (Phase 12)
+- [ ] 플러그인/커넥터 아키텍처 (Phase 13)

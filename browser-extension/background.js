@@ -1,10 +1,16 @@
-// background.js — WebSocket 연결 관리 + 메시지 라우팅
+// background.js — WebSocket 연결 관리 + 메시지 라우팅 + ACK 지원
 
 let ws = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
 const BASE_RECONNECT_DELAY = 1000; // 1초
+
+// ── Message ID generator for ACK tracking ──
+let msgIdSeq = 0;
+function nextMsgId() {
+  return `ext-${Date.now()}-${++msgIdSeq}`;
+}
 
 // ── WebSocket Connection ──
 
@@ -37,6 +43,14 @@ function connect(port) {
             });
           }
         });
+        // Send ACK if msgId present
+        if (msg.msgId && ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ack', msgId: msg.msgId }));
+        }
+        break;
+
+      case 'ack':
+        // ACK from VS Code for our messages — no action needed
         break;
 
       case 'pong':
@@ -80,6 +94,10 @@ function scheduleReconnect(port) {
 
 function sendToVSCode(data) {
   if (ws && ws.readyState === WebSocket.OPEN) {
+    // Attach msgId for ACK tracking
+    if (!data.msgId) {
+      data.msgId = nextMsgId();
+    }
     ws.send(JSON.stringify(data));
   }
 }
@@ -111,6 +129,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
 
     case 'disconnect':
       disconnect();
+      break;
+
+    case 'selectorTestResult':
+      // Forward to popup — no VS Code routing needed
       break;
   }
 });

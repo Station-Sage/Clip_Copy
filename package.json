@@ -140,6 +140,11 @@
         "title": "Refresh",
         "category": "CodeBreeze",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "codebreeze.fixErrorWithAI",
+        "title": "Fix Error with AI",
+        "category": "CodeBreeze"
       }
     ],
     "keybindings": [
@@ -173,6 +178,11 @@
         "command": "codebreeze.undoLastApply",
         "key": "ctrl+shift+u",
         "mac": "cmd+shift+u"
+      },
+      {
+        "command": "codebreeze.fixErrorWithAI",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f"
       }
     ],
     "viewsContainers": {
@@ -235,6 +245,10 @@
         {
           "command": "codebreeze.copyFileForAI",
           "group": "codebreeze@2"
+        },
+        {
+          "command": "codebreeze.fixErrorWithAI",
+          "group": "codebreeze@3"
         }
       ]
     },
@@ -374,6 +388,23 @@
           "minimum": 0,
           "maximum": 5,
           "description": "Depth of import chain tracing from error files (0=disabled, higher=more context)"
+        },
+        "codebreeze.diffPreviewMode": {
+          "type": "string",
+          "enum": ["native", "inline"],
+          "default": "native",
+          "description": "Diff preview mode: 'native' uses VS Code's built-in diff editor, 'inline' uses WebView inline diff"
+        },
+        "codebreeze.rulesFile": {
+          "type": "string",
+          "default": ".codebreeze-rules.md",
+          "description": "Path to project rules file (relative to workspace root). Rules are auto-prepended to AI context."
+        },
+        "codebreeze.agentLoopAutoApply": {
+          "type": "string",
+          "enum": ["preview", "auto", "safe"],
+          "default": "preview",
+          "description": "Agent Loop apply mode: 'preview' shows diff editor, 'auto' applies automatically, 'safe' auto-applies only if tests pass"
         }
       }
     }
