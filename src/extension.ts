@@ -101,6 +101,10 @@ export function activate(context: vscode.ExtensionContext): void {
       setAutoWatch(!isAutoWatchEnabled());
       sidebarProvider.refresh();
     }],
+    ['codebreeze.fixErrorWithAI', async () => {
+      const { fixErrorWithAI } = await import('./commands/fixWithAI');
+      return fixErrorWithAI();
+    }],
   ];
 
   for (const [id, handler] of commands) {

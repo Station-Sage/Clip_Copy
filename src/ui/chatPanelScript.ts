@@ -62,12 +62,55 @@ export function getControlPanelScript(): string {
       container.scrollTop = container.scrollHeight;
     }
 
+    // Agent Loop progress bar
+    function updateAgentLoopProgress(data) {
+      let progressEl = document.getElementById('agentLoopProgress');
+      if (!progressEl) {
+        progressEl = document.createElement('div');
+        progressEl.id = 'agentLoopProgress';
+        progressEl.style.cssText = 'padding:6px 8px; background:var(--vscode-editorWidget-background); border-radius:4px; font-size:11px; margin-bottom:4px;';
+        const container = document.getElementById('bridgeChatHistory');
+        container.parentNode.insertBefore(progressEl, container);
+      }
+
+      if (data.phase === 'complete') {
+        progressEl.remove();
+        return;
+      }
+
+      const phaseLabels = {
+        analyze: 'Analyzing',
+        request: 'Building prompt',
+        waiting: 'Waiting for AI',
+        apply: 'Applying changes',
+        verify: 'Verifying',
+      };
+      const phaseLabel = phaseLabels[data.phase] || data.phase;
+      const pct = Math.round((data.iteration / data.maxIterations) * 100);
+      const elapsed = data.elapsedSeconds;
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      const timeStr = mins > 0 ? mins + 'm ' + secs + 's' : secs + 's';
+
+      progressEl.innerHTML = ''
+        + '<div style="display:flex; justify-content:space-between; margin-bottom:2px;">'
+        + '<span>Iteration ' + data.iteration + '/' + data.maxIterations + ' - ' + phaseLabel + '</span>'
+        + '<span>' + timeStr + '</span>'
+        + '</div>'
+        + '<div style="background:var(--vscode-progressBar-background); height:4px; border-radius:2px; overflow:hidden;">'
+        + '<div style="background:var(--vscode-button-background); height:100%; width:' + pct + '%; transition:width 0.3s;"></div>'
+        + '</div>';
+    }
+
     // ── Send tab ──
     document.getElementById('btnSmartContext').addEventListener('click', () => {
       vscode.postMessage({ command: 'sendContext', types: ['file', 'errors', 'gitDiff'] });
     });
     document.getElementById('btnOpenChat').addEventListener('click', () => {
       vscode.postMessage({ command: 'openChat' });
+    });
+    document.getElementById('btnFixWithAI').addEventListener('click', () => {
+      vscode.postMessage({ command: 'fixWithAI' });
     });
     document.getElementById('btnBuild').addEventListener('click', () => {
       vscode.postMessage({ command: 'runBuild' });
@@ -294,6 +337,9 @@ export function getControlPanelScript(): string {
           if (msg.text.includes('finished') || msg.text.includes('stopped') || msg.text.includes('complete')
               || msg.text.includes('aborted') || msg.text.includes('error') || msg.text.includes('timeout')
               || msg.text.includes('Stopping')) updateAgentLoopUI(false);
+          break;
+        case 'agentLoopProgress':
+          updateAgentLoopProgress(msg);
           break;
       }
     });

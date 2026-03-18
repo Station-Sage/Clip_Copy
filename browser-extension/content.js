@@ -3,32 +3,89 @@
 (() => {
   'use strict';
 
-  // ── Site-specific selectors ──
+  // ── Site-specific selectors with fallback chains ──
   const SITE_CONFIG = {
     'genspark.ai': {
-      responseContainer: '.message-content, .response-content, [class*="answer"]',
-      inputSelector: 'textarea, [contenteditable="true"]',
-      sendButtonSelector: 'button[type="submit"], button[class*="send"]',
+      version: '2026-03-18',
+      responseContainer: [
+        '.message-content, .response-content, [class*="answer"]',
+        '[class*="message"][class*="bot"], [class*="message"][class*="assistant"]',
+        '[class*="response"], [class*="reply"]',
+      ],
+      codeBlockSelector: [
+        'pre code',
+        'pre',
+        '[class*="code-block"] code',
+        '[class*="code"] pre',
+      ],
+      inputSelector: [
+        'textarea',
+        '[contenteditable="true"]',
+        '[class*="input"] textarea',
+        '[role="textbox"]',
+      ],
+      sendButtonSelector: [
+        'button[type="submit"]',
+        'button[class*="send"]',
+        'button[aria-label*="send" i]',
+        'button[class*="submit"]',
+      ],
     },
     'chat.openai.com': {
-      responseContainer: '[data-message-author-role="assistant"]',
-      inputSelector: '#prompt-textarea',
-      sendButtonSelector: '[data-testid="send-button"]',
+      version: '2026-03-18',
+      responseContainer: [
+        '[data-message-author-role="assistant"]',
+        '[class*="assistant"][class*="message"]',
+      ],
+      codeBlockSelector: ['pre code', 'pre'],
+      inputSelector: ['#prompt-textarea', 'textarea'],
+      sendButtonSelector: [
+        '[data-testid="send-button"]',
+        'button[aria-label*="Send" i]',
+      ],
     },
     'chatgpt.com': {
-      responseContainer: '[data-message-author-role="assistant"]',
-      inputSelector: '#prompt-textarea',
-      sendButtonSelector: '[data-testid="send-button"]',
+      version: '2026-03-18',
+      responseContainer: [
+        '[data-message-author-role="assistant"]',
+        '[class*="assistant"][class*="message"]',
+      ],
+      codeBlockSelector: ['pre code', 'pre'],
+      inputSelector: ['#prompt-textarea', 'textarea'],
+      sendButtonSelector: [
+        '[data-testid="send-button"]',
+        'button[aria-label*="Send" i]',
+      ],
     },
     'claude.ai': {
-      responseContainer: '[class*="message"][class*="assistant"], .font-claude-message',
-      inputSelector: '[contenteditable="true"], textarea',
-      sendButtonSelector: 'button[aria-label="Send"], button[class*="send"]',
+      version: '2026-03-18',
+      responseContainer: [
+        '[class*="message"][class*="assistant"], .font-claude-message',
+        '[data-role="assistant"]',
+      ],
+      codeBlockSelector: ['pre code', 'pre'],
+      inputSelector: [
+        '[contenteditable="true"]',
+        'textarea',
+        '[class*="input"][contenteditable]',
+      ],
+      sendButtonSelector: [
+        'button[aria-label="Send"]',
+        'button[class*="send"]',
+      ],
     },
     'gemini.google.com': {
-      responseContainer: '.model-response-text, [class*="response"]',
-      inputSelector: '.ql-editor, textarea',
-      sendButtonSelector: 'button[aria-label="Send message"]',
+      version: '2026-03-18',
+      responseContainer: [
+        '.model-response-text, [class*="response"]',
+        '[class*="model"][class*="text"]',
+      ],
+      codeBlockSelector: ['pre code', 'pre'],
+      inputSelector: ['.ql-editor', 'textarea', '[contenteditable="true"]'],
+      sendButtonSelector: [
+        'button[aria-label="Send message"]',
+        'button[class*="send"]',
+      ],
     },
   };
 
@@ -39,14 +96,62 @@
   let lastProcessedHTML = '';
   let observer = null;
 
-  // ── Code block extraction ──
+  // ── Fallback selector helper ──
+  function queryWithFallback(root, selectors) {
+    const selectorList = Array.isArray(selectors) ? selectors : [selectors];
+    for (const sel of selectorList) {
+      try {
+        const result = root.querySelectorAll(sel);
+        if (result.length > 0) return result;
+      } catch { /* invalid selector, try next */ }
+    }
+    return root.querySelectorAll('__never_match__');
+  }
+
+  function queryOneWithFallback(root, selectors) {
+    const selectorList = Array.isArray(selectors) ? selectors : [selectors];
+    for (const sel of selectorList) {
+      try {
+        const el = root.querySelector(sel);
+        if (el) return el;
+      } catch { /* invalid selector, try next */ }
+    }
+    return null;
+  }
+
+  // ── Code block extraction with fallback selectors ──
   function extractCodeBlocks(container) {
     const blocks = [];
-    // <pre><code> 패턴 (대부분의 AI챗)
-    container.querySelectorAll('pre code, pre').forEach((el) => {
+    const codeSelectors = config.codeBlockSelector || ['pre code', 'pre'];
+    const selectorList = Array.isArray(codeSelectors) ? codeSelectors : [codeSelectors];
+
+    // Try each selector until we find code blocks
+    let codeElements = [];
+    for (const sel of selectorList) {
+      try {
+        const found = container.querySelectorAll(sel);
+        if (found.length > 0) {
+          codeElements = Array.from(found);
+          break;
+        }
+      } catch { /* try next */ }
+    }
+
+    // Final fallback: generic code selectors
+    if (codeElements.length === 0) {
+      const fallback = container.querySelectorAll('pre > code, [class*="code-block"], [class*="codeBlock"]');
+      if (fallback.length > 0) codeElements = Array.from(fallback);
+    }
+
+    const seen = new Set();
+    codeElements.forEach((el) => {
       const codeEl = el.tagName === 'PRE' ? el.querySelector('code') || el : el;
       const content = codeEl.textContent?.trim();
       if (!content || content.length < 10) return;
+
+      // Deduplicate (pre > code may match both pre and code)
+      if (seen.has(content)) return;
+      seen.add(content);
 
       // 언어 감지: class="language-typescript" 또는 "hljs typescript"
       const langClass = codeEl.className.match(/(?:language-|hljs\s+)(\w+)/);
@@ -81,7 +186,7 @@
     observer = new MutationObserver(() => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        const containers = document.querySelectorAll(config.responseContainer);
+        const containers = queryWithFallback(document, config.responseContainer);
         if (containers.length === 0) return;
 
         const lastContainer = containers[containers.length - 1];
@@ -99,7 +204,6 @@
         const blocks = extractCodeBlocks(lastContainer);
 
         if (blocks.length > 0) {
-          // background.js로 전송
           chrome.runtime.sendMessage({
             action: 'codeBlocksDetected',
             blocks,
@@ -113,7 +217,7 @@
           payload: lastContainer.textContent || '',
           source: hostname,
         });
-      }, 1500); // 1.5초 디바운스 (스트리밍 완료 대기)
+      }, 1500);
     });
 
     observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
@@ -122,11 +226,10 @@
   // ── Receive message: VS Code → browser → AI chat input ──
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.action === 'sendToAIChat') {
-      const input = document.querySelector(config.inputSelector);
+      const input = queryOneWithFallback(document, config.inputSelector);
       if (!input) return;
 
       if (input.tagName === 'TEXTAREA') {
-        // Native textarea
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
           window.HTMLTextAreaElement.prototype, 'value'
         ).set;
@@ -141,14 +244,30 @@
       // 자동 Send (설정에 따라)
       if (msg.autoSend) {
         setTimeout(() => {
-          const sendBtn = document.querySelector(config.sendButtonSelector);
+          const sendBtn = queryOneWithFallback(document, config.sendButtonSelector);
           if (sendBtn && !sendBtn.disabled) sendBtn.click();
         }, 300);
       }
+    }
+
+    // Selector test request from popup
+    if (msg.action === 'testSelectors') {
+      const results = {
+        version: config.version,
+        responseContainers: queryWithFallback(document, config.responseContainer).length,
+        inputField: !!queryOneWithFallback(document, config.inputSelector),
+        sendButton: !!queryOneWithFallback(document, config.sendButtonSelector),
+        codeBlocks: 0,
+      };
+      const containers = queryWithFallback(document, config.responseContainer);
+      containers.forEach((c) => {
+        results.codeBlocks += extractCodeBlocks(c).length;
+      });
+      chrome.runtime.sendMessage({ action: 'selectorTestResult', results });
     }
   });
 
   // ── Init ──
   startObserving();
-  console.log('[CodeBreeze] Content script loaded for', hostname);
+  console.log(`[CodeBreeze] Content script loaded for ${hostname} (selectors v${config.version})`);
 })();

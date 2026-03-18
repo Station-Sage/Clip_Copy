@@ -7,6 +7,7 @@ import { getDiagnosticsMarkdown } from './errorCollector';
 import { getGitDiff, getCurrentBranch } from './gitCollector';
 import { getLastBuildResult } from './localBuildCollector';
 import { getProjectMap } from './projectMapCollector';
+import { formatProjectRulesSection } from './rulesLoader';
 
 export async function copySmartContext(): Promise<void> {
   const markdown = await buildSmartContext();
@@ -22,6 +23,12 @@ export async function copySmartContext(): Promise<void> {
 export async function buildSmartContext(): Promise<string> {
   const parts: string[] = [];
   const workspaceRoot = getWorkspaceRoot();
+
+  // 0. Project rules (prepended first)
+  const rulesSection = formatProjectRulesSection();
+  if (rulesSection) {
+    parts.push(rulesSection);
+  }
 
   // 1. Current file
   const editor = vscode.window.activeTextEditor;
@@ -79,11 +86,19 @@ export async function buildSmartContext(): Promise<string> {
   return parts.join('\n\n');
 }
 
-export async function buildContextPayload(types: string[]): Promise<string> {
+export async function buildContextPayload(types: string[], includeRules = true): Promise<string> {
   const parts: string[] = [];
   const config = getConfig();
   const workspaceRoot = getWorkspaceRoot();
   const editor = vscode.window.activeTextEditor;
+
+  // Prepend project rules if available
+  if (includeRules) {
+    const rulesSection = formatProjectRulesSection();
+    if (rulesSection) {
+      parts.push(rulesSection);
+    }
+  }
 
   for (const type of types) {
     switch (type) {

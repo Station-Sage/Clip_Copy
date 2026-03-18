@@ -68,3 +68,25 @@ AI챗은 토큰 단위로 스트리밍. 너무 빨리 감지하면 불완전한 
 기본 깊이 2 (`errorChainDepth`). 0=비활성, 5=최대.
 너무 깊으면 관련 없는 파일까지 포함 → 토큰 낭비. 2가 실용적 균형점.
 순환 참조는 `visited` Set으로 방지.
+
+## D15: 프로젝트 규칙 시스템 (.codebreeze-rules.md)
+LLM 직접 제어 불가 → 프롬프트에 규칙 삽입으로 간접 제어.
+`.codebreeze-rules.md` 파일이 있으면 Smart Context, Agent Loop 프롬프트에 자동 prepend.
+Cursor Memories/Rules, Claude Code CLAUDE.md에 대응. 기존 `.codebreeze.json` 구조와 병행.
+`rulesFile` 설정으로 파일 경로 커스텀 가능.
+
+## D16: 커넥터 인터페이스 (api / bridge 이원화) — 장기 로드맵
+Genspark은 bridge(API 없음), Claude/OpenAI는 api. 동일 인터페이스로 추상화하여
+Agent Loop이 커넥터에 무관하게 동작. Phase 13에서 구현 예정.
+
+## D17: diff preview 모드 이원화 (native / inline)
+VS Code diff editor는 강력하지만 임시 파일 생성 필요.
+WebView 인라인은 가볍지만 기능 제한. 사용자가 선택.
+`diffPreviewMode: 'native'` (기본) / `'inline'` (기존 WebView 방식).
+
+## D18: Agent Loop 자동 적용 3단계 (preview/auto/safe)
+안전성과 자동화의 균형.
+- `preview`: diff editor로 사용자 확인 후 적용 (가장 안전)
+- `auto`: 즉시 적용 (가장 빠르지만 위험)
+- `safe`: 적용 후 빌드+테스트 → 실패 시 자동 undo (실용적 기본값 후보)
+기본값은 `preview` — 사용자가 신뢰를 쌓은 후 `safe`로 전환.

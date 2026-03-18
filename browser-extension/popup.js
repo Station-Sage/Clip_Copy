@@ -14,6 +14,36 @@ document.getElementById('disconnectBtn').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: 'disconnect' });
 });
 
+document.getElementById('testSelectorsBtn').addEventListener('click', () => {
+  const resultEl = document.getElementById('testResult');
+  resultEl.className = 'test-result show';
+  resultEl.textContent = 'Testing selectors...';
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]?.id) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'testSelectors' });
+    } else {
+      resultEl.textContent = 'No active tab found';
+    }
+  });
+});
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === 'selectorTestResult') {
+    const r = msg.results;
+    const resultEl = document.getElementById('testResult');
+    resultEl.className = 'test-result show';
+    const ok = (v) => `<span class="test-ok">OK</span> (${v})`;
+    const fail = () => '<span class="test-fail">FAIL</span>';
+    resultEl.innerHTML = [
+      `<b>Selector Test</b> (v${r.version})`,
+      `Response containers: ${r.responseContainers > 0 ? ok(r.responseContainers) : fail()}`,
+      `Input field: ${r.inputField ? ok('found') : fail()}`,
+      `Send button: ${r.sendButton ? ok('found') : fail()}`,
+      `Code blocks: ${r.codeBlocks > 0 ? ok(r.codeBlocks) : 'none detected'}`,
+    ].join('<br>');
+  }
+});
+
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.wsConnected) updateStatus(changes.wsConnected.newValue);
 });

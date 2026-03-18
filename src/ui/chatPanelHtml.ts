@@ -40,9 +40,14 @@ export function generateControlPanelHtml(
     <button class="primary-btn" id="btnSmartContext" title="Smart Context (Ctrl+Shift+S)">
       Smart Context
     </button>
-    <button class="chat-btn secondary" id="btnOpenChat" title="Open AI Chat (Ctrl+Shift+H)">
-      Open AI Chat
-    </button>
+    <div style="display:flex; gap:4px; align-items:center;">
+      <button class="chat-btn secondary" id="btnOpenChat" title="Open AI Chat (Ctrl+Shift+H)">
+        Open AI Chat
+      </button>
+      <button class="secondary" id="btnFixWithAI" title="Fix errors with AI (Ctrl+Shift+F)" style="font-size:11px;">
+        Fix with AI
+      </button>
+    </div>
 
     <details>
       <summary title="Individual context items">Advanced options</summary>

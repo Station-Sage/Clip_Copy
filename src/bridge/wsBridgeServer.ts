@@ -1,5 +1,5 @@
 /**
- * WebSocket Bridge Server — Phase 4
+ * WebSocket Bridge Server — Phase 4 + Phase 7-3 reliability
  *
  * VS Code extension side of the browser extension bridge.
  * Browser extension connects via WebSocket and sends code blocks
@@ -23,6 +23,35 @@ let bridgeServer: http.Server | undefined;
 let wss: WebSocketServer | undefined;
 let connections: WebSocket[] = [];
 let statusBarItem: vscode.StatusBarItem | undefined;
+let bridgeLog: vscode.OutputChannel | undefined;
+
+// ── Retry queue for unacknowledged messages ─────────────────────────────
+
+interface PendingMessage {
+  msgId: string;
+  data: unknown;
+  attempts: number;
+  timer: ReturnType<typeof setTimeout>;
+}
+
+const pendingMessages = new Map<string, PendingMessage>();
+const MAX_RETRY_ATTEMPTS = 3;
+const ACK_TIMEOUT_MS = 5000;
+let msgIdCounter = 0;
+
+function generateMsgId(): string {
+  return `msg-${Date.now()}-${++msgIdCounter}`;
+}
+
+// ── Logging ─────────────────────────────────────────────────────────────
+
+function log(msg: string): void {
+  if (!bridgeLog) {
+    bridgeLog = vscode.window.createOutputChannel('CodeBreeze Bridge');
+  }
+  const ts = new Date().toISOString().slice(11, 23);
+  bridgeLog.appendLine(`[${ts}] ${msg}`);
+}
 
 // ── Public API ────────────────────────────────────────────────────────────
 
@@ -39,6 +68,11 @@ export function getConnectionCount(): number {
   return connections.length;
 }
 
+export function getBridgeConnectionState(): 'connected' | 'reconnecting' | 'disconnected' {
+  if (!bridgeServer) return 'disconnected';
+  return connections.length > 0 ? 'connected' : 'reconnecting';
+}
+
 export async function startWsBridge(context: vscode.ExtensionContext): Promise<void> {
   if (bridgeServer) {
     vscode.window.showInformationMessage(
@@ -48,6 +82,7 @@ export async function startWsBridge(context: vscode.ExtensionContext): Promise<v
   }
 
   const port = getWsBridgePort();
+  log(`Starting bridge on port ${port}`);
 
   bridgeServer = http.createServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -64,7 +99,9 @@ export async function startWsBridge(context: vscode.ExtensionContext): Promise<v
 
   wss.on('connection', (ws: WebSocket) => {
     connections.push(ws);
+    log(`Client connected (total: ${connections.length})`);
     ws.send(JSON.stringify({ type: 'status', watching: true, port }));
+    updateBridgeStatusBar();
 
     ws.on('message', (data) => {
       handleWsMessage(ws, data.toString());
@@ -72,10 +109,14 @@ export async function startWsBridge(context: vscode.ExtensionContext): Promise<v
 
     ws.on('close', () => {
       connections = connections.filter((c) => c !== ws);
+      log(`Client disconnected (total: ${connections.length})`);
+      updateBridgeStatusBar();
     });
 
-    ws.on('error', () => {
+    ws.on('error', (err) => {
       connections = connections.filter((c) => c !== ws);
+      log(`Client error: ${err.message}`);
+      updateBridgeStatusBar();
     });
   });
 
@@ -91,6 +132,7 @@ export async function startWsBridge(context: vscode.ExtensionContext): Promise<v
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
+  log(`Bridge started on ws://127.0.0.1:${port}`);
   vscode.window
     .showInformationMessage(
       `CodeBreeze: Browser bridge started on ws://127.0.0.1:${port}`,
@@ -108,6 +150,12 @@ export function stopWsBridge(): void {
     vscode.window.showInformationMessage('CodeBreeze: Browser bridge is not running');
     return;
   }
+  // Clear pending retry messages
+  for (const pending of pendingMessages.values()) {
+    clearTimeout(pending.timer);
+  }
+  pendingMessages.clear();
+
   connections.forEach((ws) => ws.terminate());
   connections = [];
   wss?.close();
@@ -116,17 +164,82 @@ export function stopWsBridge(): void {
   bridgeServer = undefined;
   statusBarItem?.dispose();
   statusBarItem = undefined;
+  log('Bridge stopped');
   vscode.window.showInformationMessage('CodeBreeze: Browser bridge stopped');
 }
 
-/** Broadcast a message to all connected browser extensions */
-export function broadcastToBrowser(data: unknown): void {
+/** Broadcast a message to all connected browser extensions, with optional ACK tracking */
+export function broadcastToBrowser(data: Record<string, unknown>, expectAck = false): string | undefined {
+  let msgId: string | undefined;
+  if (expectAck) {
+    msgId = generateMsgId();
+    (data as Record<string, unknown>).msgId = msgId;
+  }
+
   const json = JSON.stringify(data);
+  log(`→ broadcast: ${data.type}${msgId ? ` (${msgId})` : ''}`);
+
   connections.forEach((ws) => {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(json);
     }
   });
+
+  if (msgId) {
+    scheduleRetry(msgId, data);
+  }
+  return msgId;
+}
+
+function scheduleRetry(msgId: string, data: unknown): void {
+  const timer = setTimeout(() => {
+    const pending = pendingMessages.get(msgId);
+    if (!pending) return;
+
+    if (pending.attempts >= MAX_RETRY_ATTEMPTS) {
+      log(`✗ ACK timeout after ${MAX_RETRY_ATTEMPTS} retries: ${msgId}`);
+      pendingMessages.delete(msgId);
+      return;
+    }
+
+    pending.attempts++;
+    log(`↻ retry ${pending.attempts}/${MAX_RETRY_ATTEMPTS}: ${msgId}`);
+    const json = JSON.stringify(pending.data);
+    connections.forEach((ws) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(json);
+    });
+    pending.timer = setTimeout(() => {
+      const p = pendingMessages.get(msgId);
+      if (p) {
+        if (p.attempts >= MAX_RETRY_ATTEMPTS) {
+          log(`✗ ACK timeout after ${MAX_RETRY_ATTEMPTS} retries: ${msgId}`);
+          pendingMessages.delete(msgId);
+        } else {
+          scheduleRetry(msgId, data);
+        }
+      }
+    }, ACK_TIMEOUT_MS);
+  }, ACK_TIMEOUT_MS);
+
+  pendingMessages.set(msgId, { msgId, data, attempts: 0, timer });
+}
+
+function handleAck(msgId: string): void {
+  const pending = pendingMessages.get(msgId);
+  if (pending) {
+    clearTimeout(pending.timer);
+    pendingMessages.delete(msgId);
+    log(`✓ ACK received: ${msgId}`);
+  }
+}
+
+function updateBridgeStatusBar(): void {
+  if (!statusBarItem) return;
+  const count = connections.length;
+  const port = getWsBridgePort();
+  statusBarItem.text = count > 0
+    ? `$(radio-tower) Bridge :${port} (${count})`
+    : `$(radio-tower) Bridge :${port}`;
 }
 
 // ── Message handler ───────────────────────────────────────────────────────
@@ -139,17 +252,29 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
     return;
   }
 
+  log(`← ${msg.type as string}${msg.msgId ? ` (${msg.msgId})` : ''}`);
+
   switch (msg.type) {
     case 'ping':
       ws.send(JSON.stringify({ type: 'pong' }));
       break;
 
+    case 'ack':
+      handleAck(String(msg.msgId));
+      break;
+
     case 'codeBlocks': {
+      // Send ACK back if msgId present
+      if (msg.msgId) {
+        ws.send(JSON.stringify({ type: 'ack', msgId: msg.msgId }));
+      }
+
       const blocks = (msg.blocks as { language?: string; filePath?: string; content: string }[]) || [];
       const source = String(msg.source || 'browser');
       if (blocks.length === 0) return;
 
       const config = getConfig();
+      log(`Received ${blocks.length} code block(s) from ${source}`);
 
       if (config.autoLevel === 'auto') {
         const cbBlocks = blocks.map((b) => ({
@@ -161,6 +286,7 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
         const results = await applyCodeBlocksHeadless(cbBlocks);
         const applied = results.filter((r) => r.status === 'applied' || r.status === 'created').length;
         ws.send(JSON.stringify({ type: 'applyResult', applied, results }));
+        log(`Auto-applied ${applied}/${blocks.length} block(s)`);
         vscode.window.showInformationMessage(
           `CodeBreeze Bridge: ${applied} block(s) applied from ${source}`
         );
@@ -197,8 +323,14 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
     }
 
     case 'ai_response': {
+      // Send ACK back if msgId present
+      if (msg.msgId) {
+        ws.send(JSON.stringify({ type: 'ack', msgId: msg.msgId }));
+      }
+
       const text = String(msg.payload || '');
       const blocks = parseClipboard(text);
+      log(`AI response: ${text.length} chars, ${blocks.length} code block(s)`);
 
       const { isAgentLoopActive, handleAgentLoopResponse } = await import('./agentLoop');
       if (isAgentLoopActive() && blocks.length > 0) {

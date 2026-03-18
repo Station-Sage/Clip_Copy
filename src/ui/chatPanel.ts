@@ -154,6 +154,10 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           break;
         }
 
+        case 'fixWithAI':
+          await vscode.commands.executeCommand('codebreeze.fixErrorWithAI');
+          break;
+
         case 'startBridge':
           await vscode.commands.executeCommand('codebreeze.startWsBridge');
           await sendBridgeStatus(webview);
