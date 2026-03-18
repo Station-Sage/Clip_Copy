@@ -270,4 +270,12 @@
   // ── Init ──
   startObserving();
   console.log(`[CodeBreeze] Content script loaded for ${hostname} (selectors v${config.version})`);
+
+  // B-026: clean up observer and timers on page unload
+  window.addEventListener('unload', () => {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+  });
 })();

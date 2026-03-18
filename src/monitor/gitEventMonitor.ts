@@ -57,5 +57,8 @@ export function registerGitEventMonitor(context: vscode.ExtensionContext): void 
     context.subscriptions.push(repoSub);
   };
 
-  activate();
+  // B-029: catch activation errors to prevent silent failures
+  activate().catch((err) => {
+    console.warn('[CodeBreeze] Git event monitor activation failed:', err);
+  });
 }

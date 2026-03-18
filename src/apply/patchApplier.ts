@@ -33,8 +33,9 @@ export async function applyPatch(patchContent: string): Promise<boolean> {
   await vscode.workspace.fs.writeFile(vscode.Uri.file(tmpPatch), encoder.encode(patchContent));
 
   try {
-    execSync(`git apply --check ${tmpName}`, workspaceRoot);
-    execSync(`git apply ${tmpName}`, workspaceRoot);
+    // B-036: quote the filename argument for safety
+    execSync(`git apply --check "${tmpName}"`, workspaceRoot);
+    execSync(`git apply "${tmpName}"`, workspaceRoot);
 
     // Open the patched file
     const doc = await vscode.workspace.openTextDocument(targetPath);
