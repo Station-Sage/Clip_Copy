@@ -43,6 +43,24 @@ function generateMsgId(): string {
   return `msg-${Date.now()}-${++msgIdCounter}`;
 }
 
+// ── Completion response listener (B-014) ────────────────────────────────
+
+type CompletionListener = (text: string) => void;
+let completionListener: CompletionListener | null = null;
+
+/** Register a one-shot listener for completion responses from the AI */
+export function onceCompletionResponse(listener: CompletionListener): void {
+  completionListener = listener;
+}
+
+function fireCompletionResponse(text: string): void {
+  if (completionListener) {
+    const cb = completionListener;
+    completionListener = null;
+    cb(text);
+  }
+}
+
 // ── Logging ─────────────────────────────────────────────────────────────
 
 function log(msg: string): void {
@@ -331,6 +349,11 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
       const text = String(msg.payload || '');
       const blocks = parseClipboard(text);
       log(`AI response: ${text.length} chars, ${blocks.length} code block(s)`);
+
+      // B-014: fire completion response for inline completion provider
+      if (blocks.length > 0) {
+        fireCompletionResponse(blocks[0].content);
+      }
 
       const { isAgentLoopActive, handleAgentLoopResponse } = await import('./agentLoop');
       if (isAgentLoopActive() && blocks.length > 0) {

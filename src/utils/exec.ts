@@ -11,19 +11,37 @@ export function execSync(command: string, cwd: string): string {
   }
 }
 
+const DEFAULT_SPAWN_TIMEOUT_MS = 120_000;
+
 export function spawnAsync(
   command: string,
   args: string[],
   cwd: string,
-  onData?: (data: string) => void
+  onData?: (data: string) => void,
+  timeoutMs: number = DEFAULT_SPAWN_TIMEOUT_MS
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const stdout: string[] = [];
     const stderr: string[] = [];
     const [cmd, ...cmdArgs] = command.split(' ');
     const allArgs = [...cmdArgs, ...args];
+    let settled = false;
 
     const proc = cp.spawn(cmd, allArgs, { cwd, shell: true });
+
+    // B-019: timeout to prevent hung processes blocking forever
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        proc.kill('SIGTERM');
+        setTimeout(() => { try { proc.kill('SIGKILL'); } catch { /* already dead */ } }, 5000);
+        resolve({
+          exitCode: 1,
+          stdout: stdout.join(''),
+          stderr: stderr.join('') + `\n[CodeBreeze] Process timed out after ${timeoutMs}ms`,
+        });
+      }
+    }, timeoutMs);
 
     proc.stdout.on('data', (data: Buffer) => {
       const text = data.toString();
@@ -38,15 +56,23 @@ export function spawnAsync(
     });
 
     proc.on('close', (code) => {
-      resolve({
-        exitCode: code ?? 1,
-        stdout: stdout.join(''),
-        stderr: stderr.join(''),
-      });
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve({
+          exitCode: code ?? 1,
+          stdout: stdout.join(''),
+          stderr: stderr.join(''),
+        });
+      }
     });
 
     proc.on('error', (err) => {
-      resolve({ exitCode: 1, stdout: '', stderr: err.message });
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve({ exitCode: 1, stdout: '', stderr: err.message });
+      }
     });
   });
 }

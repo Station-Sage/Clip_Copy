@@ -89,44 +89,33 @@ async function requestViaBridge(
   token: vscode.CancellationToken
 ): Promise<string | null> {
   try {
-    const { isWsBridgeRunning, broadcastToBrowser } = await import('../bridge/wsBridgeServer');
+    const { isWsBridgeRunning, broadcastToBrowser, onceCompletionResponse } = await import('../bridge/wsBridgeServer');
     if (!isWsBridgeRunning()) return null;
 
+    // Send completion request to browser
+    broadcastToBrowser({
+      type: 'send_to_ai',
+      payload: contextPayload,
+      autoSend: true,
+    }, true);
+
+    // Wait for AI response via bridge (B-014 fix: actually await response)
     return new Promise<string | null>((resolve) => {
-      const timeout = setTimeout(() => resolve(null), 15_000);
-
-      if (token.isCancellationRequested) {
+      let settled = false;
+      const settle = (value: string | null) => {
+        if (settled) return;
+        settled = true;
         clearTimeout(timeout);
-        resolve(null);
-        return;
-      }
+        disposeCancellation?.dispose();
+        resolve(value);
+      };
 
-      // Send completion request to browser
-      broadcastToBrowser({
-        type: 'send_to_ai',
-        payload: contextPayload,
-        autoSend: true,
-      }, true);
+      const timeout = setTimeout(() => settle(null), 15_000);
 
-      // Listen for response via agent loop handler
-      const { handleAgentLoopResponse } = require('../bridge/agentLoop');
-      const origHandler = handleAgentLoopResponse;
+      const disposeCancellation = token.onCancellationRequested(() => settle(null));
+      if (token.isCancellationRequested) { settle(null); return; }
 
-      // Wait for code blocks from AI response
-      const checkInterval = setInterval(() => {
-        if (token.isCancellationRequested) {
-          clearInterval(checkInterval);
-          clearTimeout(timeout);
-          resolve(null);
-        }
-      }, 500);
-
-      // The response comes through the normal bridge flow
-      // We resolve with null and let the user retry if needed
-      // In practice, completions appear in the bridge chat history
-      clearInterval(checkInterval);
-      clearTimeout(timeout);
-      resolve(null);
+      onceCompletionResponse((text: string) => settle(text || null));
     });
   } catch {
     return null;
