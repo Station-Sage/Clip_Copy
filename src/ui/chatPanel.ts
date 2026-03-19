@@ -278,6 +278,8 @@ function sendHistoryUpdate(): void {
   panelWebview.postMessage({ command: 'updateHistory', history });
 }
 
+let clipboardWatchBusy = false; // B-028: prevent async overlap
+
 function startClipboardWatch(): void {
   if (clipboardWatcher) return;
   clipboardWatcher = setInterval(async () => {
@@ -285,6 +287,9 @@ function startClipboardWatch(): void {
       stopClipboardWatch();
       return;
     }
+    // B-028: skip if previous tick is still running
+    if (clipboardWatchBusy) return;
+    clipboardWatchBusy = true;
     try {
       const text = await readClipboard();
       if (text !== lastClipboardText) {
@@ -309,6 +314,8 @@ function startClipboardWatch(): void {
       }
     } catch (err) {
       console.warn('[CodeBreeze] autoWatch clipboard read failed:', err);
+    } finally {
+      clipboardWatchBusy = false;
     }
   }, 1000);
 }

@@ -3,6 +3,7 @@ import * as https from 'https';
 import AdmZip from 'adm-zip';
 import { getConfig } from '../config';
 import { getLastBuildResult } from './localBuildCollector';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 export async function copyBuildLogFromGitHub(): Promise<void> {
   // Prefer local build log if available
@@ -43,7 +44,7 @@ export async function copyBuildLogFromGitHub(): Promise<void> {
       return;
     }
 
-    await vscode.env.clipboard.writeText(log);
+    await writeClipboard(log);
     vscode.window.showInformationMessage('CodeBreeze: GitHub Actions log copied to clipboard');
   } catch (err) {
     vscode.window.showErrorMessage(
@@ -120,19 +121,24 @@ function githubGet(path: string, token: string): Promise<unknown> {
       headers: buildHeaders(token),
     };
 
-    https
-      .get(options, (res) => {
-        let data = '';
-        res.on('data', (chunk: string) => (data += chunk));
-        res.on('end', () => {
-          try {
-            resolve(JSON.parse(data));
-          } catch {
-            reject(new Error(`Failed to parse GitHub API response`));
-          }
-        });
-      })
-      .on('error', reject);
+    https.get(options, (res) => {
+      // B-027: check HTTP status code
+      if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+        let body = '';
+        res.on('data', (chunk: string) => (body += chunk));
+        res.on('end', () => reject(new Error(`GitHub API ${res.statusCode}: ${body.slice(0, 200)}`)));
+        return;
+      }
+      let data = '';
+      res.on('data', (chunk: string) => (data += chunk));
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch {
+          reject(new Error(`Failed to parse GitHub API response`));
+        }
+      });
+    }).on('error', reject);
   });
 }
 

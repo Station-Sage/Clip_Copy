@@ -16,6 +16,7 @@ import { parseClipboard } from '../apply/markdownParser';
 import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
 import { getConfig } from '../config';
 import { updateControlPanel } from '../ui/chatPanel';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 // ── Server state ──────────────────────────────────────────────────────────
 
@@ -41,6 +42,24 @@ let msgIdCounter = 0;
 
 function generateMsgId(): string {
   return `msg-${Date.now()}-${++msgIdCounter}`;
+}
+
+// ── Completion response listener (B-014) ────────────────────────────────
+
+type CompletionListener = (text: string) => void;
+let completionListener: CompletionListener | null = null;
+
+/** Register a one-shot listener for completion responses from the AI */
+export function onceCompletionResponse(listener: CompletionListener): void {
+  completionListener = listener;
+}
+
+function fireCompletionResponse(text: string): void {
+  if (completionListener) {
+    const cb = completionListener;
+    completionListener = null;
+    cb(text);
+  }
 }
 
 // ── Logging ─────────────────────────────────────────────────────────────
@@ -140,7 +159,7 @@ export async function startWsBridge(context: vscode.ExtensionContext): Promise<v
     )
     .then((choice) => {
       if (choice === 'Copy URL') {
-        vscode.env.clipboard.writeText(`ws://127.0.0.1:${port}`);
+        writeClipboard(`ws://127.0.0.1:${port}`);
       }
     });
 }
@@ -195,6 +214,7 @@ export function broadcastToBrowser(
 }
 
 function scheduleRetry(msgId: string, data: unknown): void {
+  // B-021: single timer per retry cycle — no nested setTimeout
   const timer = setTimeout(() => {
     const pending = pendingMessages.get(msgId);
     if (!pending) return;
@@ -211,17 +231,19 @@ function scheduleRetry(msgId: string, data: unknown): void {
     connections.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) ws.send(json);
     });
-    pending.timer = setTimeout(() => {
+
+    // Re-schedule a single new timer for the next retry
+    const nextTimer = setTimeout(() => {
       const p = pendingMessages.get(msgId);
-      if (p) {
-        if (p.attempts >= MAX_RETRY_ATTEMPTS) {
-          log(`✗ ACK timeout after ${MAX_RETRY_ATTEMPTS} retries: ${msgId}`);
-          pendingMessages.delete(msgId);
-        } else {
-          scheduleRetry(msgId, data);
-        }
+      if (!p) return;
+      if (p.attempts >= MAX_RETRY_ATTEMPTS) {
+        log(`✗ ACK timeout after ${MAX_RETRY_ATTEMPTS} retries: ${msgId}`);
+        pendingMessages.delete(msgId);
+      } else {
+        scheduleRetry(msgId, data);
       }
     }, ACK_TIMEOUT_MS);
+    pending.timer = nextTimer;
   }, ACK_TIMEOUT_MS);
 
   pendingMessages.set(msgId, { msgId, data, attempts: 0, timer });
@@ -304,7 +326,7 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
           })
           .join('\n\n');
 
-        await vscode.env.clipboard.writeText(markdown);
+        await writeClipboard(markdown);
         ws.send(JSON.stringify({ type: 'clipboardReady', count: blocks.length }));
 
         vscode.window
@@ -336,6 +358,11 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
       const text = String(msg.payload || '');
       const blocks = parseClipboard(text);
       log(`AI response: ${text.length} chars, ${blocks.length} code block(s)`);
+
+      // B-014: fire completion response for inline completion provider
+      if (blocks.length > 0) {
+        fireCompletionResponse(blocks[0].content);
+      }
 
       const { isAgentLoopActive, handleAgentLoopResponse } = await import('./agentLoop');
       if (isAgentLoopActive() && blocks.length > 0) {

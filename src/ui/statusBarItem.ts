@@ -20,10 +20,15 @@ export function updateStatusBar(text: string, tooltip?: string, isError = false)
     : undefined;
 }
 
+let flashTimer: ReturnType<typeof setTimeout> | null = null;
+
 export function flashStatusBar(text: string, durationMs = 3000): void {
-  const original = statusBar?.text || '$(robot) CodeBreeze';
+  // B-024: cancel any previous flash to prevent race
+  if (flashTimer) clearTimeout(flashTimer);
+  const original = '$(robot) CodeBreeze';
   updateStatusBar(text);
-  setTimeout(() => {
+  flashTimer = setTimeout(() => {
+    flashTimer = null;
     if (statusBar) statusBar.text = original;
   }, durationMs);
 }

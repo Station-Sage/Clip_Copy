@@ -18,7 +18,13 @@ export async function applyPatch(patchContent: string): Promise<boolean> {
   }
 
   const targetFile = targetMatch[1].trim();
-  const targetPath = path.join(workspaceRoot, targetFile);
+  const targetPath = path.resolve(workspaceRoot, targetFile);
+
+  // B-017: path traversal 검증
+  if (!targetPath.startsWith(workspaceRoot + path.sep) && targetPath !== workspaceRoot) {
+    vscode.window.showErrorMessage('CodeBreeze: Patch target path is outside workspace');
+    return false;
+  }
 
   // Write patch to temp file and apply with git apply
   const tmpName = `.codebreeze-patch-${Date.now()}.diff`;
@@ -27,8 +33,9 @@ export async function applyPatch(patchContent: string): Promise<boolean> {
   await vscode.workspace.fs.writeFile(vscode.Uri.file(tmpPatch), encoder.encode(patchContent));
 
   try {
-    execSync(`git apply --check ${tmpName}`, workspaceRoot);
-    execSync(`git apply ${tmpName}`, workspaceRoot);
+    // B-036: quote the filename argument for safety
+    execSync(`git apply --check "${tmpName}"`, workspaceRoot);
+    execSync(`git apply "${tmpName}"`, workspaceRoot);
 
     // Open the patched file
     const doc = await vscode.workspace.openTextDocument(targetPath);

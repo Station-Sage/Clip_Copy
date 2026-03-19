@@ -31,6 +31,7 @@ import { parseClipboard } from '../apply/markdownParser';
 import { indexWorkspace, searchSymbols, getAllSymbolsFlat } from '../collect/lspIndexer';
 import { findReferencesByName } from '../collect/lspReferences';
 import { getPendingCompletionRequest } from '../providers/inlineCompletionProvider';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 // ── Server state ──────────────────────────────────────────────────────────
 
@@ -56,8 +57,7 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
     case 'read_file': {
       if (!root) throw new Error('No workspace open');
       const relPath = String(params.path || '');
-      const absPath = path.join(root, relPath);
-      if (!absPath.startsWith(root)) throw new Error('Path outside workspace');
+      const absPath = resolveAndGuard(root, relPath);
       const content = fs.readFileSync(absPath, 'utf8');
       return { path: relPath, content };
     }
@@ -66,8 +66,7 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
       if (!root) throw new Error('No workspace open');
       const relPath = String(params.path || '');
       const content = String(params.content ?? '');
-      const absPath = path.join(root, relPath);
-      if (!absPath.startsWith(root)) throw new Error('Path outside workspace');
+      const absPath = resolveAndGuard(root, relPath);
       fs.mkdirSync(path.dirname(absPath), { recursive: true });
       fs.writeFileSync(absPath, content, 'utf8');
       vscode.workspace
@@ -131,8 +130,7 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
     case 'list_files': {
       if (!root) throw new Error('No workspace open');
       const relDir = String(params.dir || '');
-      const absDir = relDir ? path.join(root, relDir) : root;
-      if (!absDir.startsWith(root)) throw new Error('Path outside workspace');
+      const absDir = relDir ? resolveAndGuard(root, relDir) : root;
       const recursive = Boolean(params.recursive);
       const files = listDir(absDir, root, recursive);
       return { files };
@@ -188,6 +186,40 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
 
     default:
       throw new Error(`Unknown tool: ${name}`);
+  }
+}
+
+/** B-018: resolve path and guard against symlink traversal */
+function resolveAndGuard(root: string, relPath: string): string {
+  const joined = path.resolve(root, relPath);
+  // Check the logical path first
+  if (!joined.startsWith(root + path.sep) && joined !== root) {
+    throw new Error('Path outside workspace');
+  }
+  // Resolve symlinks to prevent traversal via symlinked directories
+  try {
+    const real = fs.realpathSync(joined);
+    const realRoot = fs.realpathSync(root);
+    if (!real.startsWith(realRoot + path.sep) && real !== realRoot) {
+      throw new Error('Path outside workspace (symlink)');
+    }
+    return real;
+  } catch (err) {
+    // If file doesn't exist yet (write_file creating new), check parent
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      const parentDir = path.dirname(joined);
+      try {
+        const realParent = fs.realpathSync(parentDir);
+        const realRoot = fs.realpathSync(root);
+        if (!realParent.startsWith(realRoot + path.sep) && realParent !== realRoot) {
+          throw new Error('Path outside workspace (symlink)');
+        }
+      } catch {
+        // Parent doesn't exist either — will be created by caller; logical check above suffices
+      }
+      return joined;
+    }
+    throw err;
   }
 }
 
@@ -331,8 +363,11 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
   await mcpServer.connect(transport);
 
   httpServer = http.createServer(async (req, res) => {
-    // CORS for local AI clients
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // B-025: CORS restricted to localhost origins only
+    const origin = req.headers.origin || '';
+    const allowedOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ? origin : 'http://127.0.0.1';
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, MCP-Session-Id');
 
@@ -372,7 +407,7 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
     )
     .then((choice) => {
       if (choice === 'Copy URL') {
-        vscode.env.clipboard.writeText(`http://127.0.0.1:${port}`);
+        writeClipboard(`http://127.0.0.1:${port}`);
       }
     });
 }
