@@ -4,6 +4,7 @@
 set -e
 
 TMP_DIR="${TMPDIR:-/tmp}"
+TMP_DIR="${TMPDIR:-/tmp}"
 BASE_URL="https://github.com/Station-Sage/CodeBreeze/releases/download/dev-latest"
 EXT_ID="station-sage.codebreeze-0.1.0"
 
@@ -32,9 +33,11 @@ echo "=== CodeBreeze 업데이트 ==="
 # ── 1. VSIX ──
 echo "[1/3] VSIX 다운로드..."
 curl -fsSL -o "$TMP_DIR/codebreeze-latest.vsix" "$BASE_URL/codebreeze-latest.vsix"
+curl -fsSL -o "$TMP_DIR/codebreeze-latest.vsix" "$BASE_URL/codebreeze-latest.vsix"
 
 if [ -n "$EXT_DIR" ]; then
   echo "  → 기존 확장 덮어쓰기: $EXT_DIR"
+  cd "$TMP_DIR"
   cd "$TMP_DIR"
   unzip -o codebreeze-latest.vsix "extension/*" -d codebreeze-tmp
   cp -rf codebreeze-tmp/extension/* "$EXT_DIR/"
@@ -44,16 +47,21 @@ else
   echo "  → 기존 설치를 찾을 수 없음. 최초 설치 진행..."
   if command -v code-server &>/dev/null; then
     code-server --install-extension "$TMP_DIR/codebreeze-latest.vsix" --force
+    code-server --install-extension "$TMP_DIR/codebreeze-latest.vsix" --force
   elif command -v code &>/dev/null; then
     code --install-extension "$TMP_DIR/codebreeze-latest.vsix" --force
+    code --install-extension "$TMP_DIR/codebreeze-latest.vsix" --force
   else
+    echo "  → $TMP_DIR/codebreeze-latest.vsix 에 저장됨 (수동 설치 필요)"
     echo "  → $TMP_DIR/codebreeze-latest.vsix 에 저장됨 (수동 설치 필요)"
   fi
 fi
 rm -f "$TMP_DIR/codebreeze-latest.vsix"
+rm -f "$TMP_DIR/codebreeze-latest.vsix"
 
 # ── 2. 브라우저 확장 ZIP (Lemur용 보관 + PC용 압축 해제) ──
 echo "[2/3] 브라우저 확장 ZIP 다운로드..."
+curl -fsSL -o "$DOWNLOAD_DIR/codebreeze-bridge.zip" "$BASE_URL/codebreeze-bridge.zip"
 curl -fsSL -o "$DOWNLOAD_DIR/codebreeze-bridge.zip" "$BASE_URL/codebreeze-bridge.zip"
 
 mkdir -p "$BRIDGE_DIR"
@@ -63,6 +71,7 @@ echo "  → 압축 해제: $BRIDGE_DIR"
 
 # ── 3. 브라우저 확장 CRX (PC Chrome/Edge용) ──
 echo "[3/3] 브라우저 확장 CRX 다운로드..."
+curl -fsSL -o "$DOWNLOAD_DIR/codebreeze-bridge.crx" "$BASE_URL/codebreeze-bridge.crx"
 curl -fsSL -o "$DOWNLOAD_DIR/codebreeze-bridge.crx" "$BASE_URL/codebreeze-bridge.crx"
 
 echo ""
